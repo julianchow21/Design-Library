@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   KUJIRA DESIGN TOKENS, single source of truth for colour, type, shape,
+   depth and motion. Loaded by index.html, widgets.html and tests.html.
+   Apps that scaffold from this starter use these tokens only: never
+   hardcode a colour, radius or duration in page CSS (see CLAUDE.md,
+   Design system).
+
+   Dark is the default theme on :root. html.light overrides the colour
+   tokens only (radius, shadow, motion and font stay the same in both
+   themes). Token NAMES are kept stable across starter versions, so an app
+   built on an older starter can upgrade by swapping this file's values.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Lexend, self-hosted, single variable-weight file (Latin subset, OFL
+   licence). font-display:swap avoids invisible text while it loads.
+   'woff2-variations' is the correct format hint for a variable-weight
+   woff2. The plain 'woff2' fallback covers any engine that ignores it. */
+@font-face{
+  font-family:'Lexend';
+  font-weight:100 900;
+  font-style:normal;
+  font-display:swap;
+  src:url('lib/lexend.woff2') format('woff2-variations'),
+      url('lib/lexend.woff2') format('woff2');
+}
+
+:root{
+  color-scheme:dark;
+
+  /* surfaces */
+  --bg:#0f0f17;--bg2:#15151f;--bg3:#1c1c2a;--bg4:#262637;
+  --border:#2c2c42;--border2:#383853;
+
+  /* text */
+  --text:#eae9f4;--text2:#a09fba;--text3:#8584a4;
+
+  /* status pairs */
+  --red:#f26d7e;--red-soft:#321419;
+  --green:#4ac98a;--green-soft:#10291e;
+  --blue:#6f9dff;--blue-soft:#16203a;
+  --amber:#f2a93b;--amber-soft:#2a1f0d;
+
+  /* brand + accents */
+  --accent:#8b7cff;--accent2:#a597ff;--accent-soft:#1e1b3a;
+  --grad-2:#c77cff;         /* gradient end, paired with --accent at 135deg */
+  --pop:#ffb02e;--pop-soft:#2e2210;   /* decorative highlight, empty/error scenes */
+  --onacc:#170a33;          /* text/icon colour drawn on top of accent or gradient fills */
+
+  /* shape + depth */
+  --radius:10px;--radius-lg:14px;
+  --shadow-1:0 1px 2px rgba(0,0,0,.3),0 2px 10px rgba(0,0,0,.25);   /* cards */
+  --shadow-2:0 12px 32px rgba(0,0,0,.45),0 24px 64px rgba(0,0,0,.35); /* modal, toast */
+
+  /* motion */
+  --dur:.18s;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+
+  /* type */
+  --font:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+}
+
+html.light{
+  color-scheme:light;
+
+  --bg:#f5f4f9;--bg2:#ffffff;--bg3:#f8f7fb;--bg4:#eceaf4;
+  --border:#e1deee;--border2:#cdc9e0;
+
+  --text:#17151f;--text2:#534f66;--text3:#726e8a;
+
+  --red:#b0303f;--red-soft:#fbe5e8;
+  --green:#15734a;--green-soft:#e2f3ea;
+  --blue:#3d5fd4;--blue-soft:#e4e9fc;
+  --amber:#845607;--amber-soft:#f9efda;
+
+  --accent:#6a58e8;--accent2:#5847cc;--accent-soft:#e9e5fc;
+  --grad-2:#9d4fe0;
+  --pop:#8f5c07;--pop-soft:#f9efda;
+  --onacc:#ffffff;
+
+  --shadow-1:0 1px 2px rgba(23,21,31,.04),0 2px 10px rgba(23,21,31,.06);
+  --shadow-2:0 12px 32px rgba(23,21,31,.10),0 24px 64px rgba(23,21,31,.12);
+}
+
+/* Focus is never invisible. Applies to every interactive element on every
+   page that loads this file, so a host page does not need to repeat it. */
+:focus-visible{
+  outline:3px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  outline-offset:2px;
+}
+
+/* Every transform/opacity animation in the starter is gated behind this.
+   One shared kill-switch beats repeating the media query per animation. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{
+    animation-duration:.001ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.001ms!important;
+    scroll-behavior:auto!important;
+  }
+}

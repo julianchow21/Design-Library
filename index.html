@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f0f17">
+<title>Kujira Pattern Library</title>
+<link rel="stylesheet" href="tokens.css?v=0.1">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);font-weight:360;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit}
+
+/* TOPBAR, kept solid on purpose, no backdrop-filter (see starter CLAUDE.md gotchas) */
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;height:calc(56px + env(safe-area-inset-top));padding:env(safe-area-inset-top) max(16px,env(safe-area-inset-right)) 0 max(16px,env(safe-area-inset-left));position:sticky;top:0;z-index:100}
+.logo{font-weight:700;font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:9px;cursor:pointer;color:var(--text);background:none;border:none}
+.logo-mark{height:26px;width:26px;flex-shrink:0}
+.logo-name{background:linear-gradient(135deg,var(--accent),var(--grad-2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.spacer{flex:1}
+.ver{font-size:11px;color:var(--text3);font-variant-numeric:tabular-nums;padding:3px 8px;border:1px solid var(--border);border-radius:999px;white-space:nowrap}
+.icon-btn{width:32px;height:32px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background var(--dur) ease-out,color var(--dur) ease-out,transform var(--dur) var(--spring);flex-shrink:0;font-size:15px}
+.icon-btn:hover{background:var(--bg4);color:var(--text)}
+.icon-btn:active{transform:scale(.92)}
+
+/* MAIN */
+.main{padding:20px;max-width:1100px;margin:0 auto}
+.head-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.head-row h1{font-size:18px;font-weight:680;letter-spacing:-.01em}
+.filters{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:7px 14px;border-radius:999px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);cursor:pointer;font-size:12px;font-weight:500;transition:background var(--dur) ease-out,color var(--dur) ease-out,border-color var(--dur) ease-out}
+.chip:hover{background:var(--bg4);color:var(--text)}
+.chip.active{background:linear-gradient(135deg,var(--accent),var(--grad-2));border-color:transparent;color:var(--onacc)}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+
+/* CARD */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-1);display:flex;flex-direction:column;min-width:0}
+.card-demo{background:var(--bg3);border-bottom:1px solid var(--border);padding:24px;display:flex;align-items:center;justify-content:center;min-height:140px;overflow:auto}
+.card-body{padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.card-title{font-size:14px;font-weight:640;letter-spacing:-.01em;overflow-wrap:anywhere;min-width:0}
+.category-chip{flex-shrink:0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.category-chip.components{background:var(--blue-soft);color:var(--blue)}
+.category-chip.flows{background:var(--green-soft);color:var(--green)}
+.card-note{font-size:12px;color:var(--text2);overflow-wrap:anywhere}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:6px;border-top:1px solid var(--border);margin-top:4px}
+.card-source{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.btn{padding:7px 13px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-size:12px;font-weight:500;transition:background var(--dur) ease-out,border-color var(--dur) ease-out,transform var(--dur) var(--spring);white-space:nowrap;flex-shrink:0}
+.btn:hover{background:var(--bg4)}
+.btn:active{transform:scale(.96)}
+.btn.copied{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+
+/* STATE PANEL (empty), same conventions as the starter */
+@keyframes state-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.state{padding:56px 20px;text-align:center;color:var(--text2);animation:state-in var(--dur) var(--spring);grid-column:1/-1}
+.state h3{font-size:16px;color:var(--text);margin-bottom:6px;font-weight:680;letter-spacing:-.01em}
+.state p{font-size:13px;max-width:340px;margin:0 auto}
+.state-scene{margin:0 auto 14px;display:block}
+.state-scene .ss-a{fill:var(--accent);opacity:.22}
+.state-scene .ss-b{fill:var(--grad-2);opacity:.22}
+.state-scene .ss-c{fill:var(--pop);opacity:.32}
+.hidden{display:none!important}
+
+/* MOBILE, kept after base rules on purpose (see starter CLAUDE.md gotchas) */
+@media(max-width:640px){
+  .main{padding:12px}
+  .logo-name{display:none}
+  .ver{display:none}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="logo" onclick="location.reload()">
+    <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--grad-2)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><circle cx="12" cy="18" r="2.2" fill="#fff" opacity=".95"/><circle cx="19.5" cy="11.5" r="3.2" fill="#fff" opacity=".95"/><circle cx="21.5" cy="20" r="1.5" fill="#fff" opacity=".85"/></svg>
+    <span class="logo-name">Pattern Library</span>
+  </div>
+  <div class="spacer"></div>
+  <span class="ver">v0.4 (13 Jul)</span>
+  <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
+</header>
+
+<main class="main">
+  <div class="head-row">
+    <h1>Patterns</h1>
+    <div class="filters" id="filters" role="tablist" aria-label="Category filter"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</main>
+
+<!-- ============================================================================
+     PATTERN SOURCE, one <template class="pattern"> per pattern. Rendered by the
+     gallery script below. See CLAUDE.md, "How to add a pattern".
+     data-title, data-category (Components|Flows), data-source, data-note.
+     ========================================================================== -->
+
+<template class="pattern" data-title="Designed Empty State" data-category="Flows" data-source="web-app-starter (house)" data-note="Use whenever a list, table or search can legitimately return zero rows. Never leave a blank panel: name the state, explain why it is empty, and give the one action that fixes it.">
+<style>
+.dp-empty{padding:40px 16px;text-align:center;color:var(--text2);width:100%}
+.dp-empty h3{font-size:15px;color:var(--text);margin-bottom:6px;font-weight:680;letter-spacing:-.01em}
+.dp-empty p{font-size:12px;max-width:280px;margin:0 auto 12px}
+.dp-scene{margin:0 auto 12px;display:block}
+.dp-scene .a{fill:var(--accent);opacity:.22}
+.dp-scene .b{fill:var(--grad-2);opacity:.22}
+.dp-scene .c{fill:var(--pop);opacity:.32}
+.dp-btn{padding:8px 14px;border-radius:var(--radius);border:none;background:linear-gradient(135deg,var(--accent),var(--grad-2));color:var(--onacc);cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;transition:filter var(--dur) ease-out,transform var(--dur) var(--spring)}
+.dp-btn:hover{filter:brightness(1.06)}
+.dp-btn:active{transform:scale(.96)}
+</style>
+<div class="dp-empty">
+  <svg class="dp-scene" viewBox="0 0 120 90" width="88" aria-hidden="true"><circle class="a" cx="30" cy="60" r="22"/><rect class="b" x="55" y="18" width="46" height="46" rx="14"/><circle class="c" cx="94" cy="66" r="10"/></svg>
+  <h3>No items yet</h3>
+  <p>Add your first record to get started.</p>
+  <button class="dp-btn" type="button">+ Add item</button>
+</div>
+</template>
+
+<template class="pattern" data-title="Dot Globe Hero" data-category="Components" data-source="Blue Forest Digital hero (clean-room rebuild), land data: Natural Earth (public domain)" data-note="Use for a hero or feature backdrop that needs to suggest global reach or a worldwide network. Land dots are sampled offline from public-domain data, nothing is fetched at runtime. Reminder: when implementing this in a real project with AI, also prompt for a three.js WebGL version, it gives richer lighting, texture and interaction than this dependency-free canvas rebuild.">
+<style>
+.dg-wrap{width:280px;height:280px;display:flex;align-items:center;justify-content:center}
+.dg-canvas{display:block}
+</style>
+<div class="dg-wrap"><canvas class="dg-canvas" aria-hidden="true"></canvas></div>
+<script>
+(function(){
+  // Finds its own canvas relative to itself, never a global id, so several
+  // instances (or repeated re-renders from the filter cycle) never collide.
+  var script = document.currentScript;
+  var root = script.parentElement;
+  var canvas = root.querySelector('.dg-canvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  // Land dots sampled OFFLINE (build time, not runtime) from Natural Earth
+  // 110m land polygons (public domain, naturalearthdata.com) via the
+  // world-atlas topojson build, ring-sampled for near-uniform sphere density.
+  // Encoded as base64 byte pairs [latByte,lonByte], 0-255 mapped to
+  // lat -90..90 / lon -180..180. ~1890 points, ~4.92KB encoded.
+  var DOTS_B64 = "CRgJKAk4CUgJWAloCXgJhwmXCacJtwnHCdcJ5wn3DBEMHQwpDDQMQAxLDG4MegyFDJEMnAyoDLQMvwzLDNYM4gzuEA4QFxAgECkQMhA7EEQQYBBpEHIQexCEEI0QlhCfEKgQshC7EMQQzRDWEN8Q6BDxExoTIhMpEzETOBNAE0cTdBN8E4MTixOSE5oToROpE7ATuBO/E8cTzhPWE90T5RPsFykXPRdDF1AXdhd8F4MXiRePF5YXnBejF6kXrxe2F7wXwhfJF88X1hfcF+IX6RfvF/UbUBuCG4gbjRuTG5gbnhukG6kbrxu0G7obvxvFG8ob0BvVG9sb4RvmG+wb8Rv3HlEenx6kHqkerh64Hr0ewh7HHswe0B7VHtoe3x7kHukiUSKlIsglVjdLN046TTpPPks+Tj72Qk1CUEL5RU1FT0XmRftJTElPSVFJU0nnSfxMTkxQTFJMVUxXTORM5kzoUE5QUFBSUFRQVlBYUI1Qj1CSUNFQ01DWUOBQ4lDkUOdQ6VNOU1BTUlNUU1ZTWFNaU45TkFOSU5RT0lPVU9dT2VPbU91T31PhU+NT5VPnU+lT61dOV1BXUldUV1ZXWFdaV1xXjVePV5FXk1eVV9FX01fWV9hX2lfcV95X4FfiV+RX5lfoV+pX7FpOWlBaUlpUWlZaWFpaWlxai1qNWo9akVqTWpVa0VrTWtVa1lrYWtpa3FreWuBa4lrkWuZa6FrqXk5eUF5SXlReVl5YXlpeXF5eXopejF6OXpBekl6UXpZemF6fXtJe1F7VXtde2V7bXt1e317hXuNe5V7nXulhT2FRYVNhVWFXYVhhWmFcYV5hYGFiYYphjGGOYZBhkmGTYZVhl2GfYaFh0mHUYdZh2GHaYdxh3mHgYeJh42HlYedh6WH1ZU5lUGVSZVNlVWVXZVllW2VdZV9lYWViZYpljGWOZY9lkWWTZZVll2WZZaBlomXXZdll2mXcZd5l4GXiZeRl5mhNaE9oUGhSaFRoVmhYaFpoW2hdaF9oYWhjaIhoimiMaI1oj2iRaJNolWiXaJhommigaKJo12jZaNto3WjfaOFo5GjmbEpsTGxNbE9sUWxTbFVsV2xYbFpsXGxebGBsYWxjbIpsi2yNbI9skWyTbJRslmyYbJpsnGzbbN1s32zlcElwS3BNcE9wUHBScFRwVnBYcFpwW3BdcF9wYXBjcGRwinCMcI5wkHCScJNwlXCXcJlwm3NJc0tzTHNOc1BzUnNUc1VzV3NZc1tzXHNec2BzYnNkc2VziXOLc41zj3ORc5JzlHOWc5hzmnObc9Nz1XPYc+Nz5XPpc/J3RndId0p3THdOd093UXdTd1V3VndYd1p3XHded193YXdjd2V3Z3eId4p3jHeOd5B3kXeTd5V3l3eYd5p34nfjd+V353pIekl6S3pNek96UXpSelR6VnpYell6W3pdel96YXpiemR6h3qJeot6jXqPepB6knqUepZ6l3qZept6yXrVeuB64nrkeuV+SH5Jfkt+TX5PflF+Un5UflZ+WH5Zflt+XX5ffod+iX6Lfo1+j36QfpJ+lH6Wfpd+mX6bfp1+x37Jfs5+0H7SftV+3H7egUiBSYFLgU2BT4FRgVKBVIFWgViBWYFbgYeBiYGLgY2Bj4GQgZKBlIGWgZeBmYGbgZ2BnoHHgcmBzoHQgdKFSYVLhU2FT4VRhVKFVIVWhViFWYVbhYeFiYWLhY2Fj4WQhZKFlIWWhZeFmYWbhZ2FnoWghcWFx4XQhdKISohMiE6IT4hRiFOIVYhWiHiIeoh8iH6IgIiBiIOIhYiHiIiIioiMiI6IkIiRiJOIlYiXiJiImoiciJ6IoIihiLmIx4xFjEeMS4xMjE6MUIxSjFSMd4x5jHuMfYx/jICMgoyEjIaMiIyJjIuMjYyPjJGMkoyUjJaMmIyajJuMnYyfjKGMo4y2jLiMyozYj0SPS49Pj3WPdo94j3qPfI9+j4CPgY+Dj4WPh4+Jj4qPjI+Oj5CPko+Tj5WPl4+Zj5uPnI+ej6KPto+4j8aPyo/Lj9aTQZNCk0STdJN1k3eTeZN7k32Tf5OAk4KThJOGk4iTipOLk42Tj5ORk5OTlJOWk5iTmpOck5+ToZO1k7eTxpPHk8mTy5PWlzqXPJc+l0CXdZd3l3mXe5d9l3+XgJeCl4SXhpeIl4qXjJeNl4+XkZeTl5WXl5eYl5qXnpegl6KXpJe0l7aXuJfDl8WXx5fIl8qX1Zo3mjmaO5o/mkGaTpp1mneaeZp7mn2af5qAmoKahJqGmoiaipqMmo6aj5qRmpOalZqXmpmanpqgmqKapJqmmrWat5q5mruawprEmsaayJrKms2eNp44njqeQp51nneeeZ57nn2ef56AnoKehJ6Gnoieip6Mno6ekJ6SnpOelZ6XnpmenZ6fnqGeo56lnqeeqJ6ynrSetp64nrqeu57BnsOexZ7Hnsmey6ExoTWhN6E5oUihdaF3oXmhe6F9oX+hgKGCoYShhqGIoYqhjKGOoZChkqGUoZahmKGcoZ2hn6GhoaOhpaGnobGhs6G1obehuKG6obyhvqHAocKhxKHGocihyqHMoc6h0KHSodWlMKUypTSlNqU4pTqlRqV2pXileqV8pX6lgKWBpYOlhaWHpYmli6WNpY+lkaWTpZWll6WbpZ2ln6Whpamlq6Wtpa+lsaWzpbWlt6W5pbulvaW/pcGlw6XFpcelyaXLpc2lz6XRpdOoMqg0qDaoOKg6qDyoRqh4qHqofKh+qIGog6iFqIeoiaiLqI2oj6iRqJOolaiZqJuonaifqKGopainqKmoq6itqK+osaizqLWot6i5qLuovai/qMGow6jFqMeoyajLqM2oz6jRqNOo1qwxrDOsNaw3rDmsO6w9rD+sQaxDrEWseax7rH2sgKyCrISshqyIrIqsjqyQrJKslqyYrJqsnayfrKGso6ylrKesqayrrK2sr6yxrLOstay3rLqsvKy+rMCswqzErMasyKzKrMyszqzQrNKs1a8urzCvMq80rzavOK86rz2vP69Br0OvRa9Hr3qvfK9+r4Gvg6+Fr4evmq+cr56voK+jr6Wvp6+pr6uvra+vr7GvtK+2r7ivuq+8r76vwK/Cr8Wvx6/Jr8uvza/Pr9Gv06/cr96zK7Mtsy+zMbM0szazOLM6szyzP7NBs0OzRbNHs0qzgbODs4Wzl7Obs52zn7Ois6SzprOos6qzrbOvs7Gzs7O1s7izurO8s76zwLPDs8Wzx7PJs8uzzrPQs9Kz1LPbs+G2KrYsti+2MbYztja2OLY6tjy2P7ZBtkO2RbZItkq2erZ8tn62jraTtpW2l7aatpy2nrahtqe2qrastq62sLaztrW2t7a6try2vrbAtsO2xbbHtsm2zLbOttC207bZtuO6Kbosui66MLozujW6N7o6ujy6P7pBukO6RrpIukq6erp8un66gbqKuo+6kbqUupa6mLqdup+6orqmuqm6q7quurC6srq1ure6ubq8ur66wLrDusW6yLrKusy6z7rRutO61rrYutq9KL0rvS29ML0yvTW9N706vTy9P71BvUO9Rr1IvUu9Tb2BvYO9iL2NvY+9kr2cvZ69ob2mvai9qr2tva+9sr20vbe9ub28vb69wL3DvcW9yL3Kvc29z73SvdS9173Zvdu93r3lwSrBLcEvwTLBNME3wTnBPME+wUHBRMFGwUnBS8FOwVDBU8GBwYPBhsGIwYvBjsGQwZPBmMGdwZ/BosGnwarBrMGvwbHBtMG2wbnBu8G+wcHBw8HGwcjBy8HNwdDB0sHVwdfB2sHdwd/B5MUnxSrFLMUvxTLFNMU3xTrFPMU/xULFRMVHxUrFTcVSxVfFfcWAxYLFhcWIxYrFjcWQxZLFlcWYxZrFncWgxaLFpcWoxarFrcWwxbPFtcW4xbvFvcXAxcPFxcXIxcvFzcXQxdPF1cXYxdvF3cXgyCbIKcgsyC/IMsg0yDfIOsg9yEDIQ8hFyEjIS8hOyFHIVMhWyH7IhMiHyInIjMiPyJLIlciYyJrIncigyKPIpsipyKvIrsixyLTIt8i6yLzIv8jCyMXIyMjLyM3I0MjTyNbI2cjcyN7I4cwlzCnMK8wvzDLMNcw4zDvMPsxBzETMSsxNzFDMU8xWzHrMhsyJzIvMj8ySzJXMmMybzJ7MocyjzKfMqsytzLDMs8y2zLnMu8y/zMLMxczIzMvMzszRzNPM18zazN3M4MzjzO/PDs8lzyjPK88uzzHPNc84zzvPPs9Bz0vPTs9Rz4vPkc+Uz5fPm8+ez6HPpM+nz6vPrs+xz7TPt8+6z77Pwc/Ez8fPys/Oz9HP1M/Xz9rP3s/hz/HTD9MT0yDTJNMn0yvTLtMx0zXTONM800nTTdOK05HTlNOX05vTntOi06XTqNOs06/Ts9O207nTvdPA08TTx9PK087T0dPV09jT29Pf0+LWDdYR1hTWGNYc1h/WI9Yn1ivWLtYy1jbWOdY91kzWXtaD1ofWi9aS1pbWmdad1qHWpNao1qzWsNaz1rfWu9a+1sLWxtbJ1s3W0dbV1tjW3Nbg1uPW59br1vLW9tb52g7aEtoW2hraHtoi2ibaKtou2jLaNto62j7aRtpO2l7aYtpy2onajdqR2pXamdqd2qHapdqp2q3asdq12rnavdrB2sXaydrN2tHa1drZ2t3a4drl2una7drx2vXa+dr93QLdB90L3Q/dFN0Y3R3dId0l3SrdLt0z3TfdO91A3U3dUd1a3V/dY9113Yrdj92T3aDdpd2p3a7dst223bvdv93E3cjdzN3R3dXd2t3e3eLd593r3fDd9N343f3hDOER4RbhG+Eg4SXhKuE94UzhYOFl4WnhjOGR4ZbhqeGu4bPhuOG94cLhx+HM4dDh1eHa4d/h5OHp4e7h8+H95CrkL+Q15EXkS+Rb5GHkZ+Rs5LTkuuS/5MXkyuTQ5NXk2+Th5OboKeg96FzoY+hp6HDovOjC6Mnoz+wp7DjsT+xW7F7sZext7Mfszu9E71fvYO9p743zQPNL81fzY/Nu";
+
+  function decodeDots(b64s){
+    var bin = atob(b64s);
+    var n = bin.length >> 1;
+    var out = new Float32Array(n * 3); // packs x0,y,z0 (pre-rotation unit vector)
+    for (var i = 0; i < n; i++){
+      var latB = bin.charCodeAt(i*2), lonB = bin.charCodeAt(i*2+1);
+      var lat = (latB/255*180-90) * Math.PI/180;
+      var lon = (lonB/255*360-180) * Math.PI/180;
+      var cl = Math.cos(lat);
+      out[i*3]   = cl*Math.sin(lon);
+      out[i*3+1] = Math.sin(lat);
+      out[i*3+2] = cl*Math.cos(lon);
+    }
+    return out;
+  }
+  var dots = decodeDots(DOTS_B64);
+  var dotCount = dots.length / 3;
+
+  function toVec(latDeg, lonDeg){
+    var lat = latDeg*Math.PI/180, lon = lonDeg*Math.PI/180, cl = Math.cos(lat);
+    return [cl*Math.sin(lon), Math.sin(lat), cl*Math.cos(lon)];
+  }
+  // Plausible major-city coordinates, decorative only.
+  var CITIES = [
+    [40.71,-74.01],  // New York
+    [51.51,-0.13],   // London
+    [35.68,139.69],  // Tokyo
+    [-33.87,151.21], // Sydney
+    [-23.55,-46.63], // Sao Paulo
+    [30.04,31.24],   // Cairo
+    [19.08,72.88]    // Mumbai
+  ];
+  var markers = CITIES.map(function(c){ return toVec(c[0], c[1]); });
+  var ARCS = [[0,1],[1,5],[2,6],[3,4]]; // NY-London, London-Cairo, Tokyo-Mumbai, Sydney-SaoPaulo
+
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Colours read from tokens.css only, re-read whenever the theme toggles.
+  var colors = {};
+  function readColors(){
+    var cs = getComputedStyle(document.documentElement);
+    colors.accent  = cs.getPropertyValue('--accent').trim();
+    colors.accent2 = cs.getPropertyValue('--accent2').trim();
+    colors.pop     = cs.getPropertyValue('--pop').trim();
+  }
+  readColors();
+  function hexToRgb(hex){
+    hex = hex.replace('#','');
+    if (hex.length === 3) hex = hex.split('').map(function(c){ return c+c; }).join('');
+    var num = parseInt(hex, 16);
+    return [(num>>16)&255, (num>>8)&255, num&255];
+  }
+  function rgba(hex, a){
+    var c = hexToRgb(hex);
+    return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')';
+  }
+
+  var DISPLAY = 280;
+  function setupCanvas(){
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = DISPLAY*dpr;
+    canvas.height = DISPLAY*dpr;
+    canvas.style.width = DISPLAY+'px';
+    canvas.style.height = DISPLAY+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  setupCanvas();
+
+  var R = DISPLAY*0.36, cx = DISPLAY/2, cy = DISPLAY/2;
+  var theta = 0, last = null, dirty = true;
+
+  function drawArc(v1, v2, cosT, sinT){
+    var d = v1[0]*v2[0]+v1[1]*v2[1]+v1[2]*v2[2];
+    d = Math.max(-1, Math.min(1, d));
+    var ang = Math.acos(d);
+    if (ang < 0.001) return;
+    var segs = 28, started = false;
+    ctx.beginPath();
+    for (var s = 0; s <= segs; s++){
+      var tt = s/segs;
+      var a = Math.sin((1-tt)*ang)/Math.sin(ang);
+      var b = Math.sin(tt*ang)/Math.sin(ang);
+      var lift = 1 + 0.14*Math.sin(tt*Math.PI); // bulge outward, flight-path look
+      var vx = (a*v1[0]+b*v2[0])*lift, vy = (a*v1[1]+b*v2[1])*lift, vz = (a*v1[2]+b*v2[2])*lift;
+      var x = vx*cosT + vz*sinT, z = -vx*sinT + vz*cosT, y = vy;
+      var depth = (z+1)/2;
+      var px = cx + x*R, py = cy - y*R;
+      if (depth < 0.12){ started = false; continue; }
+      if (!started){ ctx.moveTo(px, py); started = true; } else { ctx.lineTo(px, py); }
+    }
+    ctx.strokeStyle = rgba(colors.accent, 0.4);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  function drawFrame(ts){
+    ctx.clearRect(0, 0, DISPLAY, DISPLAY);
+    var cosT = Math.cos(theta), sinT = Math.sin(theta);
+
+    var glow = ctx.createRadialGradient(cx, cy, R*0.2, cx, cy, R*1.5);
+    glow.addColorStop(0, rgba(colors.accent, 0.28));
+    glow.addColorStop(1, rgba(colors.accent, 0));
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, DISPLAY, DISPLAY);
+
+    var projected = new Array(dotCount);
+    for (var i = 0; i < dotCount; i++){
+      var x0 = dots[i*3], y = dots[i*3+1], z0 = dots[i*3+2];
+      var x = x0*cosT + z0*sinT, z = -x0*sinT + z0*cosT;
+      projected[i] = { x: cx + x*R, y: cy - y*R, depth: (z+1)/2 };
+    }
+    projected.sort(function(a, b){ return a.depth - b.depth; }); // back-to-front
+    for (i = 0; i < dotCount; i++){
+      var p = projected[i];
+      var rr = 0.55 + p.depth*1.15;
+      var a2 = 0.12 + p.depth*0.75;
+      ctx.beginPath();
+      ctx.fillStyle = rgba(colors.accent2, a2);
+      ctx.arc(p.x, p.y, rr, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    ARCS.forEach(function(pair){ drawArc(markers[pair[0]], markers[pair[1]], cosT, sinT); });
+
+    markers.forEach(function(m, idx){
+      var x = m[0]*cosT + m[2]*sinT, z = -m[0]*sinT + m[2]*cosT, y = m[1];
+      var depth = (z+1)/2;
+      if (depth < 0.12) return;
+      var mx = cx + x*R, my = cy - y*R;
+      ctx.beginPath();
+      ctx.fillStyle = rgba(colors.pop, 0.55 + depth*0.45);
+      ctx.arc(mx, my, 2.2, 0, Math.PI*2);
+      ctx.fill();
+      if (!reduceMotion){
+        var phase = ((ts/1600) + idx/markers.length) % 1;
+        var pr = 2.2 + phase*10, pa = (1-phase)*0.5*depth;
+        ctx.beginPath();
+        ctx.strokeStyle = rgba(colors.pop, pa);
+        ctx.lineWidth = 1.2;
+        ctx.arc(mx, my, pr, 0, Math.PI*2);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.strokeStyle = rgba(colors.pop, 0.35*depth);
+        ctx.lineWidth = 1;
+        ctx.arc(mx, my, 5, 0, Math.PI*2);
+        ctx.stroke();
+      }
+    });
+  }
+
+  // Single rAF loop. Lifecycle safety: checks canvas.isConnected every frame
+  // and stops itself (and disconnects the colour observer) the moment this
+  // card's canvas leaves the DOM, e.g. because a filter click re-rendered
+  // the grid. Idempotent: every instance owns only its own closured state,
+  // so cycling filters repeatedly never stacks loops or leaks past instances.
+  function loop(ts){
+    if (!canvas.isConnected){ mo.disconnect(); return; }
+    if (!reduceMotion){
+      if (last == null) last = ts;
+      theta += (ts - last) * 0.00012; // slow continuous Y-axis rotation
+      last = ts;
+      drawFrame(ts);
+    } else if (dirty){
+      drawFrame(ts);   // one static frame: no rotation, no pulse
+      dirty = false;
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // Theme toggle recolours the globe live (re-reads tokens.css on change).
+  var mo = new MutationObserver(function(){ readColors(); dirty = true; });
+  mo.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Launch Intro" data-category="Flows" data-source="Kujira Collectibles v3.23 (features.js, the Launch intro IIFE)" data-note="Full-screen splash that boots the app behind it, progressively enhancing from this CSS-only greeting into a WebGL scene via a lazy vendored import, with a hard ceiling and instant tap/key skip. This card demos only the CSS-only fallback tier (click to replay the dissolve/greet cycle). The full pattern, architecture, kill-switch chain, teardown checklist, asset pipeline, service worker integration, scene notes and verification gotchas, is in Launch Intro.md in this folder, too large for a single card.">
+<style>
+.li-box{width:260px;height:150px;border-radius:var(--radius-lg);position:relative;overflow:hidden;cursor:pointer;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--bg4),var(--bg2));transition:opacity 0.25s ease,transform 0.25s ease}
+.li-box.li-out{opacity:0.15;transform:scale(1.03)}
+.li-mark{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--grad-2));opacity:0;transition:opacity 0.4s ease;animation:li-pulse 2.6s ease-in-out infinite}
+.li-mark.li-show{opacity:1}
+.li-hint{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);opacity:0.5}
+@keyframes li-pulse{0%,100%{opacity:.85}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){ .li-mark{animation:none} }
+</style>
+<div class="li-box" role="button" tabindex="0" aria-label="Replay launch intro demo">
+  <div class="li-mark"></div>
+  <div class="li-hint">tap to replay</div>
+</div>
+<script>
+(function(){
+  // Finds its own root relative to itself, never a global id, so several
+  // instances (or repeated re-renders from the filter cycle) never collide.
+  var script = document.currentScript;
+  var root = script.parentElement;
+  var box = root.querySelector('.li-box');
+  var mark = root.querySelector('.li-mark');
+  if (!box || !mark) return;
+  var reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var timers = [];
+  var cycling = false;
+
+  function clearTimers(){ timers.forEach(function(id){ clearTimeout(id); }); timers.length = 0; }
+
+  // One static frame under reduced motion: greeting shown, no cycle, no dissolve.
+  function showStatic(){ mark.classList.add('li-show'); }
+
+  function playCycle(){
+    if (!box.isConnected){ clearTimers(); return; } // self-terminating: element left the DOM
+    if (reduceMotion){ showStatic(); return; }
+    cycling = true;
+    box.classList.remove('li-out');
+    mark.classList.remove('li-show');
+    timers.push(setTimeout(function(){
+      if (!box.isConnected) return;
+      mark.classList.add('li-show'); // greeting fades in, mirrors the kill-switch fallback
+    }, 200));
+    timers.push(setTimeout(function(){
+      if (!box.isConnected) return;
+      box.classList.add('li-out'); // dissolve, mirrors teardown
+    }, 1800));
+    timers.push(setTimeout(function(){
+      cycling = false;
+      if (box.isConnected) playCycle(); // idempotent loop, owns only this instance's closured state
+    }, 2200));
+  }
+
+  function onTap(){
+    clearTimers();
+    box.classList.remove('li-out');
+    playCycle();
+  }
+  box.addEventListener('click', onTap);
+  box.addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' ') onTap(); });
+
+  playCycle();
+})();
+</script>
+</template>
+
+<div id="toasts" aria-live="polite"></div>
+
+<script>
+/* ============================================================================
+   GALLERY, reads every <template class="pattern"> in the document and renders
+   one card per template. No fetch(): everything lives inline so this file
+   works opened straight from file://.
+   ========================================================================== */
+let _filter = 'All';
+const CATEGORIES = ['All', 'Components', 'Flows'];
+
+function esc(s){
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function patterns(){
+  return [...document.querySelectorAll('template.pattern')];
+}
+
+function renderFilters(){
+  const el = document.getElementById('filters');
+  el.innerHTML = CATEGORIES.map(c =>
+    `<button class="chip ${c===_filter?'active':''}" role="tab" aria-selected="${c===_filter}" onclick="setFilter('${c}')">${c}</button>`
+  ).join('');
+}
+function setFilter(c){ _filter = c; render(); }
+
+function render(){
+  renderFilters();
+  const grid = document.getElementById('grid');
+  const all = patterns();
+  const visible = _filter === 'All' ? all : all.filter(t => t.dataset.category === _filter);
+
+  if (visible.length === 0){
+    const scope = all.length === 0 ? 'library' : 'category';
+    grid.innerHTML = `
+      <div class="state">
+        <svg class="state-scene" viewBox="0 0 120 90" width="100" aria-hidden="true"><circle class="ss-a" cx="30" cy="60" r="22"/><rect class="ss-b" x="55" y="18" width="46" height="46" rx="14"/><circle class="ss-c" cx="94" cy="66" r="10"/></svg>
+        <h3>${scope === 'library' ? 'No patterns yet' : 'No patterns in ' + esc(_filter)}</h3>
+        <p>${scope === 'library' ? 'Paste inspected code from a site you admire and re-implement it clean on house tokens, then append a new pattern template (see CLAUDE.md).' : 'Nothing filed under this category yet. Try another filter or add one.'}</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  visible.forEach((tpl, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const cat = tpl.dataset.category || 'Components';
+    card.innerHTML = `
+      <div class="card-demo" id="demo-${i}"></div>
+      <div class="card-body">
+        <div class="card-title-row">
+          <div class="card-title">${esc(tpl.dataset.title || 'Untitled pattern')}</div>
+          <span class="category-chip ${cat.toLowerCase()}">${esc(cat)}</span>
+        </div>
+        <div class="card-note">${esc(tpl.dataset.note || '')}</div>
+        <div class="card-foot">
+          <span class="card-source" title="${esc(tpl.dataset.source || '')}">Source: ${esc(tpl.dataset.source || 'unknown')}</span>
+          <button class="btn" onclick="copyPattern(this, ${JSON.stringify(i)})">Copy code</button>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+    // Clone the template's live content into the demo area, scoped by the
+    // template's own inline <style>, so each card renders a working preview.
+    insertLiveContent(card.querySelector(`#demo-${i}`), tpl.content.cloneNode(true));
+  });
+}
+
+// A cloned <script> keeps its "already started" flag, so appending a clone
+// as-is leaves the script inert (it never runs). Extract the scripts first,
+// append everything else (so the container is connected to the document),
+// then create and append FRESH <script> elements onto that connected
+// container: an inline script created and appended via the DOM API (not
+// via innerHTML) executes synchronously on insertion. See CLAUDE.md.
+function insertLiveContent(container, fragment){
+  const scripts = [...fragment.querySelectorAll('script')];
+  scripts.forEach(s => s.remove());
+  container.appendChild(fragment);
+  scripts.forEach(old => {
+    const fresh = document.createElement('script');
+    for (const attr of old.attributes) fresh.setAttribute(attr.name, attr.value);
+    fresh.textContent = old.textContent;
+    container.appendChild(fresh);
+  });
+}
+
+function copyPattern(btn, idx){
+  const visible = _filter === 'All' ? patterns() : patterns().filter(t => t.dataset.category === _filter);
+  const tpl = visible[idx];
+  if (!tpl) return;
+  const code = tpl.innerHTML.trim();
+  const done = () => {
+    const original = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = original; btn.classList.remove('copied'); }, 1600);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(done).catch(() => fallbackCopy(code, done));
+  } else {
+    fallbackCopy(code, done);
+  }
+}
+// Clipboard API needs a secure context; file:// and some older browsers do
+// not have one, so fall back to a hidden textarea + execCommand.
+function fallbackCopy(text, done){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ toast('Could not copy, select and copy manually', true); }
+  document.body.removeChild(ta);
+}
+
+function toast(msg, isErr){
+  const el = document.createElement('div');
+  el.textContent = msg;
+  el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:'+(isErr?'var(--red-soft)':'var(--bg4)')+';color:'+(isErr?'var(--red)':'var(--text)')+';border:1px solid '+(isErr?'var(--red)':'var(--border2)')+';padding:10px 16px;border-radius:var(--radius);font-size:13px;box-shadow:var(--shadow-2);z-index:300';
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+/* ============================================================================
+   THEME, default to system preference, then remember the user's choice.
+   ========================================================================== */
+function applyTheme(t){
+  document.documentElement.classList.toggle('light', t === 'light');
+  document.querySelector('meta[name=theme-color]').setAttribute('content', t === 'light' ? '#f5f4f9' : '#0f0f17');
+}
+function toggleTheme(){
+  const next = document.documentElement.classList.contains('light') ? 'dark' : 'light';
+  localStorage.setItem('kjr_pattern_library_theme', next);
+  applyTheme(next);
+}
+(function initTheme(){
+  const saved = localStorage.getItem('kjr_pattern_library_theme');
+  applyTheme(saved || (matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'));
+})();
+
+render();
+</script>
+</body>
+</html>
