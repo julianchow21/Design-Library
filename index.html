@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Pattern Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.3 (16 Jul)</span>
+  <span class="ver">v1.5 (16 Jul)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -3385,6 +3385,8 @@ tr.blk-row-selected td{background:var(--accent-soft)}
 .ver-item-btn.ver-danger{color:var(--red)}
 .ver-item-btn.ver-danger:hover{background:var(--red-soft)}
 .ver-empty{padding:20px;text-align:center;color:var(--text2);font-size:12px}
+.ver-confirm{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--red-soft);border:1px solid var(--red);border-radius:var(--radius);padding:8px 10px;font-size:11.5px;color:var(--red);width:100%}
+.ver-confirm-actions{display:flex;gap:6px;flex-shrink:0}
 @media(prefers-reduced-motion:reduce){ .ver-btn{transition:none} }
 </style>
 <div class="ver-wrap">
@@ -3452,6 +3454,10 @@ tr.blk-row-selected td{background:var(--accent-soft)}
   ];
   var lastAutoDate = dateStr(NOW - 2*DAY); // matches the newest seeded auto entry
   var simNow = NOW - DAY; // first "simulate next day" click lands on real today
+  // Which row (by id) is showing an inline confirm strip in place of its
+  // normal actions, and for which action. Only one row at a time, no
+  // native dialog anywhere in this pattern: { id, action:'restore'|'delete' } or null.
+  var pendingConfirm = null;
 
   function renderCurrent(){
     if (!wrap.isConnected) return;
@@ -3468,6 +3474,24 @@ tr.blk-row-selected td{background:var(--accent-soft)}
       var when = new Date(v.ts).toLocaleString('en-GB', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
       var title = (v.data && v.data.title) ? esc(v.data.title) : '(untitled)';
       var items = v.data ? v.data.items : 0, notes = v.data ? v.data.notes : 0;
+      // Inline confirm strip replaces this row's normal actions in place,
+      // never a native dialog. Only the one row currently pending shows it.
+      if (pendingConfirm && pendingConfirm.id === v.id){
+        var isRestore = pendingConfirm.action === 'restore';
+        var msg = isRestore
+          ? 'Restore "' + esc(v.name) + '"? Current state will be overwritten (a backup will be saved first).'
+          : 'Delete "' + esc(v.name) + '"? This cannot be undone.';
+        var label = isRestore ? 'Restore now' : 'Delete forever';
+        return '<div class="ver-item">' +
+            '<div class="ver-confirm">' +
+              '<span>' + msg + '</span>' +
+              '<span class="ver-confirm-actions">' +
+                '<button type="button" class="ver-item-btn ver-danger" data-confirm-yes>' + label + '</button>' +
+                '<button type="button" class="ver-item-btn" data-confirm-no>Cancel</button>' +
+              '</span>' +
+            '</div>' +
+          '</div>';
+      }
       return '<div class="ver-item">' +
           '<div class="ver-item-info">' +
             '<div class="ver-item-name' + (v.auto ? ' ver-auto' : '') + '">' + esc(v.name) + '</div>' +
@@ -3518,8 +3542,8 @@ tr.blk-row-selected td{background:var(--accent-soft)}
   function doRestore(id){
     var v = versions.find(function(x){ return x.id === id; });
     if (!v) return;
-    var ok = window.confirm('Restore "' + v.name + '"? Current state will be overwritten (a backup version will be saved first).');
-    if (!ok) return;
+    // Confirmation already happened via the inline ver-confirm strip (see
+    // renderList above and the click handler below), never a native dialog.
     // House rule: snapshot the CURRENT state as its own version BEFORE
     // applying the restore, every time, so restoring can never itself be
     // a silent loss of whatever was live a moment ago.
@@ -3534,8 +3558,8 @@ tr.blk-row-selected td{background:var(--accent-soft)}
   function doDelete(id){
     var v = versions.find(function(x){ return x.id === id; });
     if (!v) return;
-    var ok = window.confirm('Delete "' + v.name + '"? This cannot be undone.');
-    if (!ok) return;
+    // Confirmation already happened via the inline ver-confirm strip (see
+    // renderList above and the click handler below), never a native dialog.
     versions = versions.filter(function(x){ return x.id !== id; });
     renderList();
     hint('Deleted "' + v.name + '"');
@@ -3549,8 +3573,16 @@ tr.blk-row-selected td{background:var(--accent-soft)}
   listEl.addEventListener('click', function(e){
     var rBtn = e.target.closest('[data-restore]');
     var dBtn = e.target.closest('[data-del]');
-    if (rBtn) doRestore(rBtn.getAttribute('data-restore'));
-    else if (dBtn) doDelete(dBtn.getAttribute('data-del'));
+    var yesBtn = e.target.closest('[data-confirm-yes]');
+    var noBtn = e.target.closest('[data-confirm-no]');
+    if (rBtn){ pendingConfirm = { id: rBtn.getAttribute('data-restore'), action: 'restore' }; renderList(); return; }
+    if (dBtn){ pendingConfirm = { id: dBtn.getAttribute('data-del'), action: 'delete' }; renderList(); return; }
+    if (yesBtn){
+      var pc = pendingConfirm; pendingConfirm = null;
+      if (pc){ if (pc.action === 'restore') doRestore(pc.id); else doDelete(pc.id); }
+      return;
+    }
+    if (noBtn){ pendingConfirm = null; renderList(); return; } // Cancel: this row reverts, nothing else changes
   });
 
   renderCurrent();
@@ -4777,8 +4809,9 @@ textarea.chg-input{resize:vertical;min-height:44px;font-family:inherit}
 </script>
 </template>
 
-<template class="pattern" data-title="Cross-app Topbar" data-category="Components" data-source="Portfolio repo (Portfolio, Trading, Journal topbars, unified rebuild)" data-note="Each app in the Portfolio repo hand-built its own topbar, a different structure and tab style in every one. This unifies them into one component: a brand mark on the left, app-switch tabs with a clear active state, and a right-side slot for a status pill or a settings action. The tab strip shrinks and scrolls horizontally as the bar narrows, it never wraps onto a second line. Click a tab to preview the active state, real navigation is intercepted in this demo.">
+<template class="pattern" data-title="Cross-app Topbar" data-category="Components" data-source="Portfolio repo (Portfolio, Trading, Journal topbars, unified rebuild)" data-note="Each app in the Portfolio repo hand-built its own topbar, a different structure and tab style in every one. This unifies them into one component: a brand mark on the left, app-switch tabs with a clear active state, and a right-side slot for a status pill or a settings action. A container query watches the bar's own rendered width rather than the viewport, so the same rules apply whether the card sits in a wide or narrow grid column. The status label gives way first as the bar narrows, then the brand wordmark, keeping the tab strip itself wide enough that the active tab stays visible, it shrinks and scrolls horizontally rather than ever wrapping onto a second line. Click a tab to preview the active state, real navigation is intercepted in this demo.">
 <style>
+.xt-wrap{width:100%;container-type:inline-size;container-name:xt-topbar}
 .xt-bar{display:flex;align-items:center;gap:10px;width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:8px 12px;box-shadow:var(--shadow-1);min-width:0}
 .xt-brand{display:flex;align-items:center;gap:8px;flex-shrink:0;background:none;border:none;padding:0;cursor:pointer;color:var(--text);font-family:inherit}
 .xt-brand-mark{height:24px;width:24px;flex-shrink:0}
@@ -4794,21 +4827,39 @@ textarea.chg-input{resize:vertical;min-height:44px;font-family:inherit}
 .xt-status::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0}
 .xt-icon-btn{width:28px;height:28px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;font-size:13px;transition:background var(--dur) ease-out,color var(--dur) ease-out}
 .xt-icon-btn:hover{background:var(--bg4);color:var(--text)}
+/* Container query on the bar's OWN rendered width, a card is narrow inside
+   a multi-column desktop grid even on a wide viewport, so a media query
+   (viewport-based) would not fire when it actually needs to. The actions
+   cluster gives way first (status label, then icon-btn keeps its size per
+   the fix brief), then the brand wordmark, the tab strip itself never
+   shrinks away, so the active tab keeps its room. Needs a wrapper: a
+   container cannot query its own box for its own properties (gap, padding
+   below), only descendants can respond, so .xt-bar sits one level inside
+   the queried .xt-wrap rather than being the container itself. */
+@container xt-topbar (max-width:460px){
+  .xt-status-label{display:none}
+}
+@container xt-topbar (max-width:360px){
+  .xt-bar{gap:6px;padding:8px 8px}
+  .xt-brand-name{display:none}
+}
 </style>
-<div class="xt-bar">
-  <button type="button" class="xt-brand" title="Kujira">
-    <svg class="xt-brand-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="xtlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--grad-2)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#xtlg)"/><circle cx="12" cy="18" r="2.2" fill="#fff" opacity=".95"/><circle cx="19.5" cy="11.5" r="3.2" fill="#fff" opacity=".95"/><circle cx="21.5" cy="20" r="1.5" fill="#fff" opacity=".85"/></svg>
-    <span class="xt-brand-name">Kujira</span>
-  </button>
-  <nav class="xt-tabs" aria-label="Switch app">
-    <a href="../Portfolio/" class="xt-tab">Portfolio</a>
-    <a href="./" class="xt-tab active" aria-current="page">Trading</a>
-    <a href="../Journal/" class="xt-tab">Journal</a>
-  </nav>
-  <div class="xt-spacer"></div>
-  <div class="xt-actions">
-    <span class="xt-status">Synced</span>
-    <button type="button" class="xt-icon-btn" title="Settings" aria-label="Settings">⚙</button>
+<div class="xt-wrap">
+  <div class="xt-bar">
+    <button type="button" class="xt-brand" title="Kujira" aria-label="Kujira">
+      <svg class="xt-brand-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="xtlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--grad-2)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#xtlg)"/><circle cx="12" cy="18" r="2.2" fill="#fff" opacity=".95"/><circle cx="19.5" cy="11.5" r="3.2" fill="#fff" opacity=".95"/><circle cx="21.5" cy="20" r="1.5" fill="#fff" opacity=".85"/></svg>
+      <span class="xt-brand-name">Kujira</span>
+    </button>
+    <nav class="xt-tabs" aria-label="Switch app">
+      <a href="../Portfolio/" class="xt-tab">Portfolio</a>
+      <a href="./" class="xt-tab active" aria-current="page">Trading</a>
+      <a href="../Journal/" class="xt-tab">Journal</a>
+    </nav>
+    <div class="xt-spacer"></div>
+    <div class="xt-actions">
+      <span class="xt-status" title="Synced"><span class="xt-status-label">Synced</span></span>
+      <button type="button" class="xt-icon-btn" title="Settings" aria-label="Settings">⚙</button>
+    </div>
   </div>
 </div>
 <script>
@@ -4825,13 +4876,16 @@ textarea.chg-input{resize:vertical;min-height:44px;font-family:inherit}
       tab.setAttribute('aria-current', 'page');
     });
   });
-  requestAnimationFrame(function(){
+  function xtCentre(){
     var act = root.querySelector('.xt-tab.active');
     var strip = root.querySelector('.xt-tabs');
     if (!act || !strip || !strip.isConnected) return;
     var a = act.getBoundingClientRect(), s = strip.getBoundingClientRect();
+    if (!s.width) return;
     strip.scrollLeft += (a.left + a.width / 2) - (s.left + s.width / 2);
-  });
+  }
+  xtCentre();
+  setTimeout(xtCentre, 0);
 })();
 </script>
 </template>
