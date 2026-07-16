@@ -163,7 +163,86 @@ before start, mid-run, and after teardown:
   and narrow mobile portrait automatically, no separate hard-coded
   per-aspect correction.
 
-## 7. Verification gotchas
+## 7. The ceiling: four iterations, and the lesson in why each was wrong
+
+A hard ceiling (section 1) sounds like a simple problem: pick a big enough
+number. In practice it took four real iterations to get right, and the
+failure pattern across all four is the most valuable lesson in this whole
+pattern, worth documenting on its own.
+
+1. **Stage 1, naive fixed deadline.** One single timer, armed once at scene
+   start, sized as "natural sequence duration plus a fixed safety margin".
+   Failed live: real main-thread contention (the host app doing its own
+   real work on the same JS thread while the scene played) ate into the
+   fixed margin and truncated a healthy, still-playing run.
+2. **Stage 2, rolling watchdog.** Re-armed at each choreography
+   phase-transition, sized off that phase's own nominal duration. Passed
+   thorough sandboxed testing with injected delays. Still failed live: on
+   the real device, contention was heavy enough that the run never
+   completed even its first phase within that phase's own generous
+   allowance. The sandboxed tests only ever injected short, bounded
+   delays, never sustained contention of unknown, potentially large
+   magnitude, so they never had the chance to disprove the design.
+3. **Stage 3, per-frame heartbeat.** Replaced phase-based re-arming with a
+   fixed generous window (e.g. 3000ms), re-armed at the top of every
+   single rendered frame, so as long as any frame renders, at any pace,
+   the watchdog can never fire, only a genuinely dead render loop trips
+   it. Materially more robust, and it survived a strong sandboxed test
+   simulating sustained contention (repeated injected stalls spread
+   across the whole sequence, several cumulative seconds of delay). Still
+   failed live, but for a new and different reason: the failure had moved
+   from "the render loop is running slow" to "the very first frame never
+   got scheduled at all". The scene's async setup (fetching real remote
+   content over the network for several items) was gating first paint,
+   and real network latency on the live device exceeded even the
+   bootstrap deadline meant to catch a hung asset load.
+4. **Stage 4, decouple first paint from the network.** The fix that
+   actually mattered architecturally: recognise that the choreography
+   (what to show, in what order, which item is the hero/climax) can
+   usually be decided from data already available locally, with zero
+   network calls, while only the final visual textures need remote
+   fetching. Render the first frame immediately using local placeholder
+   art for everything, then fetch each item's real texture independently
+   in the background after the scene already exists, cross-fading each
+   one in the moment its own fetch resolves, fully decoupled from every
+   other item. A slow or failed fetch for one item just means that one
+   item keeps its placeholder forever, never blocking or delaying
+   anything else. This removes the entire class of "network took too
+   long before first paint" failures structurally, not by tuning a
+   number.
+
+**The meta-lesson, stated plainly: when a timeout keeps needing "just one
+more fix" against real-world conditions a sandboxed test did not
+reproduce, stop tuning the number and ask whether the thing being timed
+out should be an async dependency of first paint at all.** Each of
+stages 1 to 3 was a legitimate, well-tested improvement on the last, and
+each was still wrong, because all three were fighting the same root
+design mistake (network on the critical path to first paint) from a
+different angle. Only reshaping the dependency (stage 4) closed the class
+of bug for good.
+
+**Accepted residual risk.** Even after stage 4, a genuinely severe
+host-app main-thread starvation (a large enough, data-heavy host app
+doing enough synchronous work on load) can still, in principle, starve
+the render loop itself for long enough to trip even a generous per-frame
+heartbeat. Stage 4 fixes the network-dependency class of failure, not
+host-app starvation in general. Document this as an accepted, known
+residual risk of any heavy WebGL-on-load pattern layered onto a
+data-heavy host app, not a gap to quietly ignore. Mitigation menu for a
+future implementer, pick per project:
+
+- defer starting the WebGL work until just after the host app's own
+  heaviest initial synchronous render pass (e.g. via
+  `requestIdleCallback` or a `setTimeout(fn, 0)` yield point) rather than
+  racing it from page load
+- loosen the heartbeat window further and accept a slower worst-case
+  recovery
+- keep the visual scene itself cheap enough that it competes less for
+  main-thread time
+- default the whole feature off on data-heavy hosts and make it
+  opt-in/on-demand rather than autoplaying on every load
+
+## 8. Verification gotchas
 
 Hard-won, stated as rules:
 
@@ -191,11 +270,34 @@ Hard-won, stated as rules:
    by the intro. The overlay or the app must actively defer or queue those
    notifications while the overlay is up, never try to fight it with
    z-index.
-   - *Status: a toast-deferral queue for this exact problem is planned for
-     Collectibles v3.24. This section will be completed with the concrete
-     mechanism once that change ships. Not yet captured here.*
+   - **Toast deferral mechanism.** If the app's own toast/notification
+     function is a reassignable top-level `function` or `let` binding
+     (not `const`) in a classic, non-module script sharing global scope
+     with the intro's own script, it can be intercepted for the intro's
+     lifetime:
+     - Once the intro commits to a path that will eventually tear down
+       (so an early bail-out before that point can never leave the
+       interception installed permanently), capture the real function
+       into a closured reference and install a stub in its place.
+     - The stub queues `[message, duration, isError]` tuples instead of
+       displaying anything, capped to a small number (e.g. 3), dropping
+       the oldest entry once the cap is exceeded, so the queue can never
+       grow unbounded.
+     - On teardown, in a try/finally so this runs exactly once even down
+       an error path: restore the real function first (so both the
+       replayed calls and any brand-new call made during replay hit the
+       real function again), then replay the queued entries in order,
+       the first immediately and each subsequent one delayed by the
+       running total of every prior message's own effective display
+       duration, so no two replayed messages overlap on screen.
+     - This is deferral, not suppression. Nothing queued is ever lost,
+       it is only delayed until the overlay is gone.
+     - If the app's toast function is a `const` binding, an ES module
+       export, or otherwise not reassignable, this exact technique does
+       not apply. Look instead for an app-level "notifications paused"
+       flag that the toast function itself checks before rendering.
 
-## 8. Code skeleton
+## 9. Code skeleton
 
 Generic placeholders throughout: rename the `intro` namespace prefix to
 avoid global collisions, replace `FEATURED_IDS` and `getDataCandidates()`
@@ -542,6 +644,16 @@ self.addEventListener('activate', (e) => {
   source were trimmed from the skeleton to keep it under budget. The
   architecture note (section 1) and scene construction notes (section 6)
   describe the rules to reapply them per project.
-- The toast-deferral mechanism for the top-layer popover problem (section
-  7, point 4) is not yet captured, it ships in Collectibles v3.24, after
-  this extraction.
+- The code skeleton (section 9) ships the simplest, stage-1-style single
+  fixed-deadline ceiling timer (`HARD_CEILING_MS`, one `setTimeout`) for
+  clarity and brevity as a starting point. Section 7 documents why that
+  exact design failed live and what replaced it: a real implementation
+  should upgrade it to at least the per-frame heartbeat (stage 3), and
+  restructure asset loading so first paint never waits on a network
+  fetch (stage 4), rather than shipping the naive version as-is.
+- The placeholder-first, cross-fade-in-real-textures technique (stage 4
+  of section 7) is described in prose only. The asset pipeline notes
+  (section 4) and the skeleton (section 9) still show a fetch-then-build
+  sequence for simplicity. Reapply per project: build the scene
+  immediately with local placeholder art for every slot, then swap each
+  texture in independently the moment its own fetch resolves.
