@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Pattern Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.5 (16 Jul)</span>
+  <span class="ver">v1.6 (17 Jul)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -6670,6 +6670,343 @@ textarea.chg-input{resize:vertical;min-height:44px;font-family:inherit}
   openBtn.addEventListener('click', open);
   closeBtn.addEventListener('click', close);
   scrim.addEventListener('click', close);
+})();
+</script>
+</template>
+
+
+<template class="pattern" data-title="Tree Finder" data-category="Components" data-source="clean-room build from a text description of a file-browser panel screenshot Julian admires (no source code or image was available)" data-note="Filterable file tree: typing narrows every node by name live, a kept node drags its whole ancestor chain open with it, everything else drops out. A leading ? switches to a content search over each file's short embedded body instead of its name (invented sample text, no real file reads), a matching file shows a highlighted snippet of where the hit landed. One roving-tabindex row is always the current selection: Up/Down move it among visible rows, Right opens a closed folder or steps into an already-open one, Left closes an open folder or steps up to its parent, Enter marks the row Opened, a highlighted no-op since there is no file viewer to open into. Folder state reads from chevron rotation plus indentation, never colour alone, the accent tint on a folder icon is only a secondary cue on top of that. Deliberately a flat aria-level/aria-expanded treeitem list rather than nested role=group subtrees, the same pragmatic accessible-tree approach as this library's Month Calendar roving tabindex, not a full WAI-ARIA treegrid. Try 'test' to see a folder and a nested file match together, or '?currency' to search file contents.">
+<style>
+.tf-panel{width:100%;max-width:340px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1);display:flex;flex-direction:column;overflow:hidden;font-size:12.5px;color:var(--text)}
+.tf-head{padding:12px 14px 0}
+.tf-title{font-size:11px;font-weight:640;letter-spacing:.3px;color:var(--text3);text-transform:uppercase}
+.tf-filter-row{display:flex;align-items:center;gap:7px;margin:9px 12px 10px;padding:6px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);transition:border-color var(--dur) ease-out}
+.tf-filter-row:focus-within{border-color:var(--accent)}
+.tf-filter-icon{color:var(--text3);font-size:12px;flex-shrink:0;line-height:1}
+.tf-filter{flex:1;border:none;background:none;outline:none;color:var(--text);font-family:inherit;font-size:12px;min-width:0}
+.tf-filter::placeholder{color:var(--text3)}
+.tf-tree-wrap{position:relative;overflow-y:auto;max-height:270px;padding:2px 6px 6px;border-top:1px solid var(--border)}
+.tf-tree{list-style:none}
+.tf-row{display:flex;flex-direction:column;gap:2px;padding:5px 8px 5px 0;border-radius:7px;cursor:pointer;color:var(--text2);min-width:0}
+.tf-row:hover{background:var(--bg3)}
+.tf-row.tf-active{background:var(--bg4);color:var(--text);box-shadow:inset 2px 0 0 var(--accent)}
+.tf-row.tf-active .tf-name{font-weight:640}
+.tf-row-main{display:flex;align-items:center;gap:6px;min-width:0}
+.tf-toggle{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text3)}
+button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
+.tf-row[aria-expanded="true"] .tf-toggle{transform:rotate(90deg)}
+.tf-icon{flex-shrink:0;color:var(--text3)}
+.tf-row[data-type="folder"] .tf-icon{color:var(--accent)}
+.tf-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;flex:1}
+.tf-mark{background:var(--accent-soft);color:var(--accent);font-weight:640;border-radius:3px;padding:0 1px}
+.tf-opened-badge{margin-left:6px;font-size:9px;font-weight:640;text-transform:uppercase;letter-spacing:.3px;color:var(--green);background:var(--green-soft);padding:1px 6px;border-radius:999px;vertical-align:middle;flex-shrink:0}
+.tf-snippet{margin-left:34px;font-size:10.5px;color:var(--text3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tf-empty{padding:26px 16px;text-align:center;color:var(--text2)}
+.tf-empty-icon{margin:0 auto 10px;display:block}
+.tf-ee-a{fill:var(--bg4)}
+.tf-ee-b{stroke:var(--border2)}
+.tf-ee-c{fill:var(--accent-soft)}
+.tf-empty h4{font-size:13px;color:var(--text);font-weight:640;margin-bottom:4px}
+.tf-empty p{font-size:11.5px;max-width:230px;margin:0 auto 12px}
+.tf-clear{padding:6px 13px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-size:11.5px;font-weight:500}
+.tf-clear:hover{background:var(--bg4)}
+.tf-status{padding:7px 14px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text3);margin:0}
+</style>
+<div class="tf-panel">
+  <div class="tf-head"><h3 class="tf-title">Files</h3></div>
+  <div class="tf-filter-row">
+    <span class="tf-filter-icon" aria-hidden="true">&#9013;</span>
+    <input type="text" class="tf-filter" placeholder="Filter files... (?text to search contents)" aria-label="Filter files by name, or type ? followed by text to search file contents" autocomplete="off" spellcheck="false">
+  </div>
+  <div class="tf-tree-wrap">
+    <ul class="tf-tree" role="tree" aria-label="Files"></ul>
+    <div class="tf-empty hidden">
+      <svg class="tf-empty-icon" viewBox="0 0 64 46" width="48" aria-hidden="true">
+        <rect class="tf-ee-a" x="6" y="12" width="38" height="28" rx="4"/>
+        <path class="tf-ee-b" d="M6 18 L6 11 Q6 7 10 7 L20 7 L24 12 L40 12 Q44 12 44 16" fill="none" stroke-width="2"/>
+        <circle class="tf-ee-c" cx="48" cy="32" r="12"/>
+        <path d="M44 28 L52 36 M52 28 L44 36" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <h4 class="tf-empty-title">No files match</h4>
+      <p class="tf-empty-sub"></p>
+      <button type="button" class="tf-clear">Clear filter</button>
+    </div>
+  </div>
+  <p class="tf-status" aria-live="polite"></p>
+</div>
+<script>
+(function(){
+  var script = document.currentScript;
+  var root = script.parentElement;
+  var input = root.querySelector('.tf-filter');
+  var treeEl = root.querySelector('.tf-tree');
+  var emptyEl = root.querySelector('.tf-empty');
+  var statusEl = root.querySelector('.tf-status');
+  if (!input || !treeEl || !emptyEl || !statusEl) return;
+  var emptyTitleEl = emptyEl.querySelector('.tf-empty-title');
+  var emptySubEl = emptyEl.querySelector('.tf-empty-sub');
+  var clearBtn = emptyEl.querySelector('.tf-clear');
+
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  // Invented sample workspace, a short content body per file so a leading
+  // "?" query can search file contents, not just names.
+  var DATA = [
+    { name:'src', type:'folder', children:[
+      { name:'components', type:'folder', children:[
+        { name:'Button.tsx', type:'file', content:'export function Button({ label, onClick }) { return <button onClick={onClick}>{label}</button>; }' },
+        { name:'Modal.tsx', type:'file', content:'export function Modal({ open, children }) { if (!open) return null; return <div className="modal">{children}</div>; }' },
+        { name:'index.ts', type:'file', content:"export * from './Button'; export * from './Modal';" }
+      ]},
+      { name:'hooks', type:'folder', children:[
+        { name:'useDebounce.ts', type:'file', content:'export function useDebounce(value, delay) { const [state, setState] = useState(value); return state; }' }
+      ]},
+      { name:'utils', type:'folder', children:[
+        { name:'format.ts', type:'file', content:"export function formatCurrency(value) { return new Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD' }).format(value); }" },
+        { name:'date.ts', type:'file', content:'export function relativeTime(iso) { return Math.round((Date.now() - new Date(iso)) / 86400000) + "d ago"; }' }
+      ]},
+      { name:'App.tsx', type:'file', content:"import { Button } from './components'; export default function App() { return <Button label=\"Save\" onClick={save} />; }" }
+    ]},
+    { name:'docs', type:'folder', children:[
+      { name:'quarterly-financial-summary-and-projections-for-stakeholder-review.md', type:'file', content:'Q3 revenue grew 12 percent quarter over quarter, driven mainly by the enterprise tier renewal cohort.' },
+      { name:'onboarding.md', type:'file', content:'New team members should read the architecture overview before their first pull request.' }
+    ]},
+    { name:'tests', type:'folder', children:[
+      { name:'Button.test.tsx', type:'file', content:"describe('Button', function(){ it('calls onClick when clicked', function(){}); });" }
+    ]},
+    { name:'package.json', type:'file', content:'{ "name": "tree-finder-demo", "version": "1.0.0", "dependencies": { "react": "^18.2.0" } }' },
+    { name:'README.md', type:'file', content:'Tree Finder demo workspace. Run npm install then npm run dev to start the local server.' }
+  ];
+
+  (function assignIds(nodes, prefix){
+    nodes.forEach(function(n){
+      n.id = prefix + n.name;
+      if (n.children) assignIds(n.children, n.id + '/');
+    });
+  })(DATA, '');
+
+  var byId = {};
+  (function indexNodes(nodes){
+    nodes.forEach(function(n){ byId[n.id] = n; if (n.children) indexNodes(n.children); });
+  })(DATA);
+
+  var totalCounts = (function(){
+    var files = 0, folders = 0;
+    (function walk(nodes){
+      nodes.forEach(function(n){
+        if (n.type === 'folder'){ folders++; walk(n.children || []); }
+        else files++;
+      });
+    })(DATA);
+    return { files: files, folders: folders };
+  })();
+
+  // Per-instance state, closured, never global, so cycling the gallery's
+  // filter never lets one card instance leak into another's.
+  var state = { query: '', expanded: {}, activeId: null, openedId: null };
+  DATA.forEach(function(n){ if (n.type === 'folder') state.expanded[n.id] = true; });
+
+  var lastRows = [];
+
+  function matchesName(n, needle){ return n.name.toLowerCase().indexOf(needle) !== -1; }
+  function matchesContent(n, needle){ return n.type === 'file' && !!n.content && n.content.toLowerCase().indexOf(needle) !== -1; }
+
+  function highlightName(name, needle){
+    var lower = name.toLowerCase();
+    var idx = lower.indexOf(needle);
+    if (idx === -1) return esc(name);
+    return esc(name.slice(0, idx)) + '<mark class="tf-mark">' + esc(name.slice(idx, idx + needle.length)) + '</mark>' + esc(name.slice(idx + needle.length));
+  }
+
+  function snippetFor(content, needle){
+    var lower = content.toLowerCase();
+    var idx = lower.indexOf(needle);
+    if (idx === -1) return esc(content.slice(0, 70)) + (content.length > 70 ? '…' : '');
+    var start = Math.max(0, idx - 18);
+    var end = Math.min(content.length, idx + needle.length + 30);
+    return (start > 0 ? '…' : '') + esc(content.slice(start, idx)) +
+      '<mark class="tf-mark">' + esc(content.slice(idx, idx + needle.length)) + '</mark>' +
+      esc(content.slice(idx + needle.length, end)) + (end < content.length ? '…' : '');
+  }
+
+  // Walks the whole tree once, working out which nodes match the current
+  // query (own match) and which subtrees contain a match (any), then
+  // flattens only the kept nodes into a display-ordered row list, forcing
+  // open any folder that owes its visibility to a matching descendant.
+  function buildVisible(){
+    var trimmed = state.query.trim();
+    var contentMode = trimmed.charAt(0) === '?';
+    var needle = (contentMode ? trimmed.slice(1) : trimmed).trim().toLowerCase();
+    var filtering = needle.length > 0;
+
+    var matchInfo = {};
+    function scan(n){
+      var own = filtering && (contentMode ? matchesContent(n, needle) : matchesName(n, needle));
+      var hit = own;
+      if (n.children) n.children.forEach(function(c){ if (scan(c)) hit = true; });
+      matchInfo[n.id] = { own: own, hit: hit };
+      return hit;
+    }
+    DATA.forEach(scan);
+
+    var rows = [];
+    function walk(n, depth){
+      if (filtering && !matchInfo[n.id].hit) return;
+      var hasKids = n.type === 'folder' && !!n.children && n.children.length > 0;
+      var open = false;
+      if (hasKids){
+        var childrenHit = filtering && n.children.some(function(c){ return matchInfo[c.id] && matchInfo[c.id].hit; });
+        open = filtering ? (childrenHit || !!state.expanded[n.id]) : !!state.expanded[n.id];
+      }
+      rows.push({ node: n, depth: depth, own: matchInfo[n.id] ? matchInfo[n.id].own : false, open: open, hasKids: hasKids });
+      if (hasKids && open) n.children.forEach(function(c){ walk(c, depth + 1); });
+    }
+    DATA.forEach(function(n){ walk(n, 0); });
+
+    return { rows: rows, filtering: filtering, contentMode: contentMode, needle: needle };
+  }
+
+  function rowHtml(r, result){
+    var n = r.node, depth = r.depth;
+    var isActive = n.id === state.activeId;
+    var isOpened = n.id === state.openedId;
+    var showNameMark = result.filtering && !result.contentMode && r.own;
+    var nameHtml = showNameMark ? highlightName(n.name, result.needle) : esc(n.name);
+    var toggle = r.hasKids
+      ? '<button type="button" class="tf-toggle" tabindex="-1" aria-hidden="true"><svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true"><path d="M5 3 L11 8 L5 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>'
+      : '<span class="tf-toggle" aria-hidden="true"></span>';
+    var icon = n.type === 'folder'
+      ? '<svg class="tf-icon" viewBox="0 0 20 16" width="13" height="13" aria-hidden="true"><path d="M1 3.5C1 2.67 1.67 2 2.5 2H7L8.6 3.6H17.5C18.33 3.6 19 4.27 19 5.1V12.5C19 13.33 18.33 14 17.5 14H2.5C1.67 14 1 13.33 1 12.5Z" fill="currentColor"/></svg>'
+      : '<svg class="tf-icon" viewBox="0 0 16 20" width="11" height="13" aria-hidden="true"><path d="M2 1H10L14 5V19H2Z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M10 1V5H14" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>';
+    var snippet = '';
+    if (result.filtering && result.contentMode && r.own && n.content){
+      snippet = '<span class="tf-snippet">' + snippetFor(n.content, result.needle) + '</span>';
+    }
+    return '<li class="tf-row' + (isActive ? ' tf-active' : '') + '" role="treeitem" data-id="' + esc(n.id) + '" data-type="' + n.type + '" aria-level="' + (depth + 1) + '"' +
+      (r.hasKids ? ' aria-expanded="' + (r.open ? 'true' : 'false') + '"' : '') +
+      ' aria-selected="' + (isActive ? 'true' : 'false') + '" tabindex="' + (isActive ? '0' : '-1') + '" style="padding-left:' + (6 + depth * 18) + 'px" title="' + esc(n.name) + '">' +
+      '<span class="tf-row-main">' + toggle + icon + '<span class="tf-name">' + nameHtml + '</span>' +
+      (isOpened ? '<span class="tf-opened-badge">Opened</span>' : '') + '</span>' +
+      snippet +
+    '</li>';
+  }
+
+  function findRowEl(id){
+    if (!id) return null;
+    for (var i = 0; i < treeEl.children.length; i++){
+      if (treeEl.children[i].getAttribute('data-id') === id) return treeEl.children[i];
+    }
+    return null;
+  }
+
+  function render(){
+    var result = buildVisible();
+    lastRows = result.rows;
+
+    if (result.filtering && result.rows.length === 0){
+      treeEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      emptySubEl.textContent = result.contentMode
+        ? (result.needle ? 'Nothing in this workspace contains "' + result.needle + '".' : 'Type after the ? to search file contents.')
+        : 'No file or folder name contains "' + result.needle + '".';
+      state.activeId = null;
+      statusEl.textContent = '0 results';
+      return;
+    }
+
+    emptyEl.classList.add('hidden');
+    treeEl.classList.remove('hidden');
+
+    if (!result.rows.some(function(r){ return r.node.id === state.activeId; })){
+      state.activeId = result.rows.length ? result.rows[0].node.id : null;
+    }
+
+    var focusWasInside = document.activeElement && root.contains(document.activeElement) && document.activeElement !== input;
+
+    treeEl.innerHTML = result.rows.map(function(r){ return rowHtml(r, result); }).join('');
+
+    if (focusWasInside){
+      var focusEl = findRowEl(state.activeId);
+      if (focusEl) focusEl.focus();
+    }
+    var activeEl = findRowEl(state.activeId);
+    if (activeEl && activeEl.scrollIntoView) activeEl.scrollIntoView({ block: 'nearest' });
+
+    statusEl.textContent = result.filtering
+      ? (result.rows.length + ' result' + (result.rows.length === 1 ? '' : 's') + (result.contentMode ? ' in file contents' : ' by name'))
+      : (state.openedId && byId[state.openedId] ? 'Opened ' + byId[state.openedId].name : totalCounts.files + ' files in ' + totalCounts.folders + ' folders');
+  }
+
+  function toggleExpand(id){
+    var r = null;
+    for (var i = 0; i < lastRows.length; i++){ if (lastRows[i].node.id === id){ r = lastRows[i]; break; } }
+    var currentlyOpen = r ? r.open : !!state.expanded[id];
+    state.expanded[id] = !currentlyOpen;
+  }
+
+  function openNode(id){ state.openedId = id; }
+
+  input.addEventListener('input', function(){ state.query = input.value; render(); });
+  input.addEventListener('keydown', function(e){
+    if (e.key === 'ArrowDown' && lastRows.length){
+      e.preventDefault();
+      state.activeId = lastRows[0].node.id;
+      render();
+      var el = findRowEl(state.activeId);
+      if (el) el.focus();
+    }
+  });
+
+  treeEl.addEventListener('click', function(e){
+    var row = e.target.closest ? e.target.closest('.tf-row') : null;
+    if (!row) return;
+    var id = row.getAttribute('data-id');
+    var n = byId[id];
+    if (!n) return;
+    state.activeId = id;
+    if (n.type === 'folder') toggleExpand(id); else openNode(id);
+    render();
+    var el = findRowEl(id);
+    if (el) el.focus();
+  });
+
+  treeEl.addEventListener('keydown', function(e){
+    var row = e.target.closest ? e.target.closest('.tf-row') : null;
+    if (!row) return;
+    var id = row.getAttribute('data-id');
+    var idx = -1;
+    for (var i = 0; i < lastRows.length; i++){ if (lastRows[i].node.id === id){ idx = i; break; } }
+    if (idx === -1) return;
+    var r = lastRows[idx];
+
+    if (e.key === 'ArrowDown'){
+      if (idx < lastRows.length - 1){ e.preventDefault(); state.activeId = lastRows[idx + 1].node.id; render(); }
+    } else if (e.key === 'ArrowUp'){
+      if (idx > 0){ e.preventDefault(); state.activeId = lastRows[idx - 1].node.id; render(); }
+      else { e.preventDefault(); input.focus(); }
+    } else if (e.key === 'ArrowRight'){
+      e.preventDefault();
+      if (r.hasKids){
+        if (!r.open){ state.expanded[r.node.id] = true; render(); }
+        else if (idx < lastRows.length - 1 && lastRows[idx + 1].depth === r.depth + 1){ state.activeId = lastRows[idx + 1].node.id; render(); }
+      }
+    } else if (e.key === 'ArrowLeft'){
+      e.preventDefault();
+      if (r.hasKids && r.open){ state.expanded[r.node.id] = false; render(); }
+      else if (r.depth > 0){
+        for (var j = idx - 1; j >= 0; j--){ if (lastRows[j].depth === r.depth - 1){ state.activeId = lastRows[j].node.id; break; } }
+        render();
+      }
+    } else if (e.key === 'Enter'){
+      e.preventDefault();
+      openNode(id);
+      render();
+    }
+  });
+
+  if (clearBtn) clearBtn.addEventListener('click', function(){ input.value = ''; state.query = ''; input.focus(); render(); });
+
+  render();
 })();
 </script>
 </template>
