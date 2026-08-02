@@ -3,12 +3,12 @@
 localStorage-first sync with a cloud backend: the UI always reads and writes
 local state instantly, a debounced background flush pushes dirty rows to the
 cloud, and a load-time reconciliation merges cloud state back in without
-clobbering unsynced local edits. Extracted from Kujira Journal (`index.html`,
+clobbering unsynced local edits. Extracted from Kujira Forex (`index.html`,
 lines 361 to 463 at time of writing: `isLocalhostPreview`, `_dirty`,
 `markDirty`, `sbBatchUpsert`, `sbFetchAll`, `sbDelete`, `_queueDelete`,
 `flushPendingDeletes`, `_flushDirty`, `mergeTable`, `loadData`). Generalised
 below: no Supabase URL, no trade schema, config object instead of
-Journal's `DB`/`TABLES` globals.
+Forex's `DB`/`TABLES` globals.
 
 Category: Flows. This is a systems pattern (data layer spanning several
 functions and two localStorage keys plus a REST backend), too large for a
@@ -187,7 +187,7 @@ a single-user app where conflicting concurrent writers are rare, and is
 flagged in the source as a `TODO` to revisit once there is a live backend to
 validate a per-row fix against, not a gap to redesign blind.
 
-## 6. Generalising away from Journal's globals
+## 6. Generalising away from Forex's globals
 
 Journal hardcodes `DB` and `TABLES` as module-level globals. To reuse this
 engine in another project without forking it, wrap the same logic behind a
@@ -220,7 +220,7 @@ only change needed to lift the pattern out of Journal, the rules in sections
 
 ## What was left out
 
-- Journal's actual Supabase REST calls (`sbBatchUpsert`, `sbFetchAll`,
+- Forex's actual Supabase REST calls (`sbBatchUpsert`, `sbFetchAll`,
   `sbDelete`) are shown above only as the shape to follow, replace the
   fetch URL and payload mapping with your own backend's REST or RPC surface.
 - Row-level optimistic concurrency (a real per-row `updated_at` compare

@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Pattern Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.6 (17 Jul)</span>
+  <span class="ver">v1.9 (1 Aug)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -598,7 +598,7 @@ button{font-family:inherit}
     document.head.appendChild(s);
   }
 
-  loadLib('lib/kjr-format.js?v=1.0', function(){ return !!window.KjrFmt; }, function(){
+  loadLib('lib/kjr-format.js?v=1.2', function(){ return !!window.KjrFmt; }, function(){
     loadLib('lib/kjr-calendar.js?v=1.0', function(){ return !!window.KjrCalendar; }, function(){
       if (!mount.isConnected || !window.KjrCalendar) return; // card left the DOM (filter cycled) or lib failed
       mountDemo();
@@ -731,7 +731,7 @@ button{font-family:inherit}
 </script>
 </template>
 
-<template class="pattern" data-title="Modal Shell" data-category="Components" data-source="Journal (index.html, .overlay/.modal CSS plus field()/frow() builders)" data-note="Overlay plus centred modal, closed by the X, Cancel, or a click on the overlay itself (checks event.target===this on the overlay's own click handler, so a click inside the modal never bubbles up to close it). field()/frow() are small string builders for a labelled input with its own error slot, reused for every form in the app. This demo scopes the overlay to the card instead of the full viewport, so it cannot leak past a filter re-render. The scrim colour (rgba(0,0,0,.55)) is a deliberate exception to tokens-only, matching Journal's own source: a modal scrim needs to darken whatever is behind it the same way regardless of the page's light/dark theme, the same reasoning Launch Intro.md documents for its fixed brand gradient.">
+<template class="pattern" data-title="Modal Shell" data-category="Components" data-source="Forex (index.html, .overlay/.modal CSS plus field()/frow() builders)" data-note="Overlay plus centred modal, closed by the X, Cancel, or a click on the overlay itself (checks event.target===this on the overlay's own click handler, so a click inside the modal never bubbles up to close it). field()/frow() are small string builders for a labelled input with its own error slot, reused for every form in the app. This demo scopes the overlay to the card instead of the full viewport, so it cannot leak past a filter re-render. The scrim colour (rgba(0,0,0,.55)) is a deliberate exception to tokens-only, matching Forex's own source: a modal scrim needs to darken whatever is behind it the same way regardless of the page's light/dark theme, the same reasoning Launch Intro.md documents for its fixed brand gradient.">
 <style>
 .ms-wrap{position:relative;width:100%;min-height:170px;display:flex;align-items:center;justify-content:center}
 .ms-open{padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg4);color:var(--text);cursor:pointer;font-size:12px;font-weight:500}
@@ -1119,7 +1119,7 @@ button{font-family:inherit}
 </script>
 </template>
 
-<template class="pattern" data-title="CSV Import" data-category="Flows" data-source="Journal (index.html, parseCSV() plus the fuzzy header mapping in importCSV())" data-note="A hand-rolled CSV parser (handles quoted fields, escaped quotes, commas inside quotes, and both CRLF and LF line endings) feeds a fuzzy header mapper: each target field has an alias list, matched by substring against the lower-cased header row, first alias to hit wins, order matters. No column-order assumption, the file can name and order its columns however it likes. This demo uses a generic contacts alias list, not Journal's trade fields.">
+<template class="pattern" data-title="CSV Import" data-category="Flows" data-source="Forex (index.html, parseCSV() plus the fuzzy header mapping in importCSV())" data-note="A hand-rolled CSV parser (handles quoted fields, escaped quotes, commas inside quotes, and both CRLF and LF line endings) feeds a fuzzy header mapper: each target field has an alias list, matched by substring against the lower-cased header row, first alias to hit wins, order matters. No column-order assumption, the file can name and order its columns however it likes. This demo uses a generic contacts alias list, not Forex's trade fields.">
 <style>
 .ci-wrap{width:100%;max-width:480px;display:flex;flex-direction:column;gap:10px}
 .ci-textarea{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;background:var(--bg3);border:1px solid var(--border2);color:var(--text);border-radius:var(--radius);padding:8px 10px;min-height:80px;width:100%;resize:vertical}
@@ -1162,7 +1162,7 @@ button{font-family:inherit}
     'John Smith,john@example.com,,Follow up next week\r\n' +
     '"Lee, Priya",priya@example.com,Nimbus Co,';
 
-  // Vendored parser logic (Journal's parseCSV, unchanged): quote-aware,
+  // Vendored parser logic (Forex's parseCSV, unchanged): quote-aware,
   // handles "" as an escaped quote, comma and CRLF/LF as terminators.
   function parseCSV(text){
     var rows=[], i=0, field='', row=[], q=false;
@@ -1176,7 +1176,7 @@ button{font-family:inherit}
     return rows.filter(function(r){ return r.some(function(x){ return String(x).trim()!==''; }); });
   }
 
-  // Generic alias list, not Journal's trade-field aliases.
+  // Generic alias list, not Forex's trade-field aliases.
   var ALIASES = {
     name: ['name','full name','contact'],
     email: ['email','e-mail','mail'],
@@ -1565,7 +1565,7 @@ button{font-family:inherit}
     var existing = document.querySelector('script[data-pl-lib="kjr-format"]');
     if (existing) { existing.addEventListener('load', cb); if (window.KjrFmt) cb(); return; }
     var s = document.createElement('script');
-    s.src = 'lib/kjr-format.js?v=1.0'; s.dataset.plLib = 'kjr-format';
+    s.src = 'lib/kjr-format.js?v=1.2'; s.dataset.plLib = 'kjr-format';
     s.onload = cb;
     document.head.appendChild(s);
   }
@@ -4853,7 +4853,7 @@ textarea.chg-input{resize:vertical;min-height:44px;font-family:inherit}
     <nav class="xt-tabs" aria-label="Switch app">
       <a href="../Portfolio/" class="xt-tab">Portfolio</a>
       <a href="./" class="xt-tab active" aria-current="page">Trading</a>
-      <a href="../Journal/" class="xt-tab">Journal</a>
+      <a href="../Forex/" class="xt-tab">Forex</a>
     </nav>
     <div class="xt-spacer"></div>
     <div class="xt-actions">
@@ -7011,6 +7011,183 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
 </script>
 </template>
 
+<template class="pattern" data-title="Selection Bar" data-category="Components" data-source="Journal v8.1 (index.html, edSelToolbar* functions)" data-note="Floating action bar on text selection, Notion-style. Highlight text and a small bar appears above it with contextual actions, here Maps (Google Maps directions to the selected text, origin left blank so Maps fills the user's location) and Copy. Key implementation rules: the bar's own mousedown must preventDefault or the click collapses the selection first, defer the show until after mouseup with setTimeout 0 (never requestAnimationFrame, it starves in hidden documents), and hide on Escape, click-away, scroll and page switch. Desktop pointer only, gate with matchMedia hover and pointer fine so it never fights the native touch callout.">
+<style>
+.selbar-demo{
+  position:relative;
+  border:1px solid var(--border2);
+  border-radius:var(--radius);
+  background:var(--bg3);
+  padding:16px;
+}
+.selbar-caption{
+  font-size:11px;
+  color:var(--text3);
+  text-transform:uppercase;
+  letter-spacing:.4px;
+  margin-bottom:8px;
+}
+.selbar-text{
+  font-size:13px;
+  line-height:1.6;
+  color:var(--text);
+}
+.selbar-bar{
+  position:absolute;
+  display:none;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:6px;
+  box-shadow:var(--shadow-2);
+  z-index:1000;
+  gap:2px;
+}
+.selbar-bar.show{
+  display:flex;
+}
+.selbar-btn{
+  padding:6px 10px;
+  border-radius:var(--radius);
+  border:1px solid var(--border2);
+  background:var(--bg3);
+  color:var(--text);
+  cursor:pointer;
+  font-size:12px;
+  font-weight:500;
+  font-family:inherit;
+  transition:background var(--dur) ease-out,border-color var(--dur) ease-out;
+  white-space:nowrap;
+}
+.selbar-btn:hover{
+  background:var(--bg4);
+  border-color:var(--border);
+}
+.selbar-btn:active{
+  transform:scale(.95);
+}
+</style>
+<div class="selbar-demo">
+  <div class="selbar-caption">Highlight some text below</div>
+  <p class="selbar-text">Try selecting text in this paragraph. When you highlight something, a small floating bar will appear with options to open the location in Google Maps or copy the text. This works great for place names like Marina Bay Sands Singapore, addresses, or any searchable text.</p>
+  <div class="selbar-bar">
+    <button class="selbar-btn selbar-maps">Maps</button>
+    <button class="selbar-btn selbar-copy">Copy</button>
+  </div>
+</div>
+<script>
+(function(){
+  const root = document.currentScript.parentElement.querySelector('.selbar-demo');
+  if (!root) return;
+
+  const bar = root.querySelector('.selbar-bar');
+  const mapsBtn = root.querySelector('.selbar-maps');
+  const copyBtn = root.querySelector('.selbar-copy');
+
+  const state = { active: false };
+
+  function show() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount || sel.toString().length === 0) {
+      hide();
+      return;
+    }
+
+    const range = sel.getRangeAt(0);
+    if (!root.contains(range.commonAncestorContainer)) {
+      hide();
+      return;
+    }
+
+    const rect = range.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+
+    const top = rect.top - rootRect.top - bar.offsetHeight - 8;
+    const left = Math.max(0, Math.min(rect.left - rootRect.left + rect.width / 2 - bar.offsetWidth / 2, root.offsetWidth - bar.offsetWidth));
+
+    bar.style.top = top + 'px';
+    bar.style.left = left + 'px';
+
+    bar.classList.add('show');
+    state.active = true;
+  }
+
+  function hide() {
+    bar.classList.remove('show');
+    state.active = false;
+  }
+
+  function handleMouseUp(e) {
+    if (!root.isConnected) {
+      removeListeners();
+      return;
+    }
+    setTimeout(show, 0);
+  }
+
+  function handleMouseDown(e) {
+    if (!root.isConnected) {
+      removeListeners();
+      return;
+    }
+    if (e.target === mapsBtn || e.target === copyBtn || bar.contains(e.target)) {
+      e.preventDefault();
+      return;
+    }
+    hide();
+  }
+
+  function handleKeyDown(e) {
+    if (!root.isConnected) {
+      removeListeners();
+      return;
+    }
+    if (e.key === 'Escape') {
+      hide();
+    }
+  }
+
+  function removeListeners() {
+    document.removeEventListener('mouseup', handleMouseUp);
+    document.removeEventListener('mousedown', handleMouseDown);
+    document.removeEventListener('keydown', handleKeyDown);
+  }
+
+  mapsBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const q = String(window.getSelection()).replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (q) {
+      window.open('https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(q), '_blank', 'noopener');
+    }
+  });
+
+  copyBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = String(window.getSelection());
+    if (text) {
+      navigator.clipboard.writeText(text).catch(function() {
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+      });
+    }
+  });
+
+  bar.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+  });
+
+  document.addEventListener('mouseup', handleMouseUp);
+  document.addEventListener('mousedown', handleMouseDown);
+  document.addEventListener('keydown', handleKeyDown);
+})();
+</script>
+</template>
 
 <div id="toasts" aria-live="polite"></div>
 

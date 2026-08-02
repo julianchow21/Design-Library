@@ -4,7 +4,7 @@ A minimal service worker app shell: precache the static shell on install,
 serve network-first with a cache fallback so a deploy is picked up
 immediately when online, and never touch cross-origin or non-GET requests
 so a live backend call is never served stale. Extracted from Kujira
-Journal's `sw.js` in full (26 lines, the whole file). Generalised: swap
+Forex's `sw.js` in full (26 lines, the whole file). Generalised: swap
 `kjr-journal-v3` and the `SHELL` list for your own app's assets.
 
 Category: Flows. This is a systems pattern (a separate worker script,
@@ -18,10 +18,10 @@ This file is the full pattern.
 ## 1. Install: precache the shell
 
 ```js
-const CACHE = 'kjr-journal-v3'; // bump this string on every ship
+const CACHE = 'kjr-forex-v2'; // bump this string on every ship
 const SHELL = [
   './', './index.html', './icon.svg', './manifest.webmanifest',
-  './lib/theme-init.js?v=1.0', './lib/kjr-format.js?v=1.0', './lib/kjr-calendar.js?v=1.0'
+  './lib/theme-init.js?v=1.0', './lib/kjr-format.js?v=1.1', './lib/kjr-calendar.js?v=1.0'
 ];
 
 self.addEventListener('install', e => {
@@ -121,7 +121,7 @@ until the version string changes.
 ## What was left out
 
 - No offline write queue or background sync registration, this shell is
-  read-side caching only. Journal's actual offline write durability comes
+  read-side caching only. Forex's actual offline write durability comes
   from the separate localStorage-first data layer (see `Sync Engine.md`),
   not from the service worker.
 - No dedicated long-lived runtime cache bucket (contrast `Launch Intro.md`'s

@@ -35,7 +35,19 @@ A pattern's HTML may include a `<script>` (e.g. a canvas animation). `render()` 
 
 ## Dynamic list handlers
 
-When a rendered row's inline `onclick` needs to reference that row's own data, never interpolate the row's own text (a user-entered tag, a free-text label) into a DOM id or an inline handler argument, stray quotes or angle brackets in that text break the markup or open an injection path. Instead build a small per-render array of the real objects, keyed by a plain integer index, and give every row's handler only that index (e.g. `onclick="renameTagUI(3)"`), the handler looks the real object up from the array at call time (see Journal's tag manager, `index.html`, `openTagManager()`). Rebuild the array fresh on every render so an index from a stale render can never be replayed against a list that has since changed shape.
+When a rendered row's inline `onclick` needs to reference that row's own data, never interpolate the row's own text (a user-entered tag, a free-text label) into a DOM id or an inline handler argument, stray quotes or angle brackets in that text break the markup or open an injection path. Instead build a small per-render array of the real objects, keyed by a plain integer index, and give every row's handler only that index (e.g. `onclick="renameTagUI(3)"`), the handler looks the real object up from the array at call time (see Forex's tag manager, `index.html`, `openTagManager()`). Rebuild the array fresh on every render so an index from a stale render can never be replayed against a list that has since changed shape.
+
+## Taste axes (review vocabulary)
+
+Judge any pattern or UI direction on five spectrums before intake: composure (restrained to theatrical, how loudly it performs), density (spacious to operational, how much work fits a screen), contrast (soft to sharp, edge definition and hierarchy), materiality (flat to layered, borders, shadows, depth), motion (still to expressive, how much movement explains state).
+
+Five review questions for any direction:
+
+- What should the user notice in under two seconds
+- What would disappear if you removed 20% of the chrome
+- Which states are still undesigned
+- Does it feel like the product category or like a generic AI demo
+- Would it hold up with real content, messy data, and long labels
 
 ## Promotion rule
 
