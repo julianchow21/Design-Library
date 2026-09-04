@@ -83,7 +83,7 @@ still run the poll/pill against its own plain HTTP headers.
 ## 5. Integration steps for a new app
 
 1. Add `sw.js` with the network-first HTML / cache-first static split above
-   (or start from the web-app-starter variant, see 7, and add the split
+   (or start from the App Starter variant, see 7, and add the split
    later if the app needs it).
 2. Register it once, after load: `if ('serviceWorker' in navigator)
    window.addEventListener('load', () => navigator.serviceWorker
@@ -115,9 +115,9 @@ still run the poll/pill against its own plain HTTP headers.
   matters in a multi-instance context like this gallery (handled in the
   pattern's own script via an `isConnected` check plus a `MutationObserver`).
 
-## 7. The web-app-starter variant
+## 7. The App Starter variant
 
-`templates/web-app-starter/sw.js` is deliberately smaller: a single
+`templates/App Starter/sw.js` is deliberately smaller: a single
 `SHELL` array precached on `install`, one network-first `fetch` handler for
 every same-origin GET (no HTML-vs-asset split), falling back to
 `caches.match(req)` then `caches.match('./index.html')` on failure. No

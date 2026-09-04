@@ -140,7 +140,7 @@ before start, mid-run, and after teardown:
   app's live light/dark theme tokens). A splash is commonly designed to
   read the same regardless of the user's theme. Document this as an
   intentional exception to "tokens only", not an oversight, if the target
-  project's pattern-library conventions otherwise mandate tokens
+  project's Design Library conventions otherwise mandate tokens
   everywhere.
 - Repeated filler geometry (many identical small quads) built as a single
   `InstancedMesh`, one draw call for the whole field regardless of

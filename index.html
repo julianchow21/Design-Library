@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f0f17">
-<title>Kujira Pattern Library</title>
+<title>Kujira Design Library</title>
 <link rel="stylesheet" href="tokens.css?v=0.1">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -80,10 +80,10 @@ button{font-family:inherit}
 <header class="topbar">
   <div class="logo" onclick="location.reload()">
     <svg class="logo-mark" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--grad-2)"/></linearGradient></defs><rect width="32" height="32" rx="9" fill="url(#lg)"/><circle cx="12" cy="18" r="2.2" fill="#fff" opacity=".95"/><circle cx="19.5" cy="11.5" r="3.2" fill="#fff" opacity=".95"/><circle cx="21.5" cy="20" r="1.5" fill="#fff" opacity=".85"/></svg>
-    <span class="logo-name">Pattern Library</span>
+    <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.9 (1 Aug)</span>
+  <span class="ver">v1.11 (31 Aug)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -101,7 +101,7 @@ button{font-family:inherit}
      data-title, data-category (Components|Flows), data-source, data-note.
      ========================================================================== -->
 
-<template class="pattern" data-title="Designed Empty State" data-category="Flows" data-source="web-app-starter (house) plus Personal Finance Spending (index.html, #empty onboarding markup at 169-178, .state CSS at 113-120)" data-note="Use whenever a list, table or search can legitimately return zero rows. Never leave a blank panel: name the state, explain why it is empty, and give the one action that fixes it. Two variants shown. Generic empty list (top): the original doctrine, a short named state plus one fix action. Onboarding / first-run (bottom): for the specific case of an app with no data source connected yet, where 'add your first record' alone is not enough, it adds numbered steps spelling out exactly how to get data in before the call-to-action.">
+<template class="pattern" data-title="Designed Empty State" data-category="Flows" data-source="App Starter (house) plus Personal Finance Spending (index.html, #empty onboarding markup at 169-178, .state CSS at 113-120)" data-note="Use whenever a list, table or search can legitimately return zero rows. Never leave a blank panel: name the state, explain why it is empty, and give the one action that fixes it. Two variants shown. Generic empty list (top): the original doctrine, a short named state plus one fix action. Onboarding / first-run (bottom): for the specific case of an app with no data source connected yet, where 'add your first record' alone is not enough, it adds numbered steps spelling out exactly how to get data in before the call-to-action.">
 <style>
 .dp-demo{display:flex;flex-direction:column;gap:20px;width:100%;max-width:340px}
 .dp-block-label{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:600;margin-bottom:2px}
@@ -7185,6 +7185,551 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
   document.addEventListener('mouseup', handleMouseUp);
   document.addEventListener('mousedown', handleMouseDown);
   document.addEventListener('keydown', handleKeyDown);
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Validated Import and Export Suite" data-category="Flows" data-source="Catalogue source-only evidence: collectibles-csv-and-ai-assisted-import at Kujira/Collectibles/app.js:11017; collectibles-csv-json-and-xlsx-export at Kujira/Collectibles/app.js:11352; journal-markdown-and-json-import-export at Kujira/Journal/index.html:15654" data-note="Provisional pilot on house tokens. It combines file selection, validation preview, explicit accepted and rejected counts, safe progress and export to a new file. Catalogue evidence was inspected source-only, no runtime verification is claimed.">
+<style>
+.vix-root{container-type:inline-size;width:100%;max-width:720px;display:grid;gap:12px;color:var(--text);font-family:var(--font)}
+.vix-top,.vix-panel,.vix-summary{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-1)}
+.vix-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px}
+.vix-eyebrow,.vix-caption{margin:0 0 4px;color:var(--text3);font-size:10px;font-weight:650;letter-spacing:.45px;text-transform:uppercase}
+.vix-title{margin:0;font-size:17px;line-height:1.25;font-weight:680}
+.vix-copy{margin:4px 0 0;color:var(--text2);font-size:11.5px;line-height:1.5}
+.vix-fixture{min-width:112px;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font:inherit;font-size:11px}
+.vix-grid{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(205px,.75fr);gap:12px}
+.vix-panel{padding:14px;min-width:0}
+.vix-pick{display:flex;align-items:center;gap:10px;padding:11px;border:1px dashed var(--border2);border-radius:var(--radius);background:var(--bg3)}
+.vix-file{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.vix-file-copy{min-width:0;flex:1}
+.vix-file-name{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:620}
+.vix-file-hint{display:block;margin-top:2px;color:var(--text3);font-size:10.5px}
+.vix-btn{border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--text);padding:7px 10px;font:inherit;font-size:11px;font-weight:620;cursor:pointer;transition:background var(--dur) ease-out,border-color var(--dur) ease-out}
+.vix-btn:hover{border-color:var(--accent);background:var(--accent-soft)}
+.vix-btn-primary{background:var(--accent);border-color:var(--accent);color:var(--onacc)}
+.vix-btn-primary:hover{background:var(--accent2);border-color:var(--accent2)}
+.vix-btn:disabled{cursor:not-allowed;opacity:.55}
+.vix-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.vix-stat{padding:9px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+.vix-stat-label{display:flex;align-items:center;gap:5px;color:var(--text2);font-size:10.5px}
+.vix-stat-mark{font-weight:750}
+.vix-stat-mark[data-kind="accepted"]{color:var(--green)}
+.vix-stat-mark[data-kind="rejected"]{color:var(--red)}
+.vix-stat strong{display:block;margin-top:3px;font-size:19px;line-height:1}
+.vix-progress-wrap{margin-top:10px}
+.vix-progress-head{display:flex;justify-content:space-between;gap:8px;color:var(--text2);font-size:10.5px}
+.vix-progress{height:7px;margin-top:6px;overflow:hidden;border-radius:var(--radius);background:var(--bg4)}
+.vix-progress-bar{height:100%;width:0;background:var(--accent);transition:width var(--dur) ease-out}
+.vix-error{display:none;margin-top:10px;padding:9px;border:1px solid var(--red);border-radius:var(--radius);background:var(--red-soft);color:var(--text);font-size:11px;line-height:1.45}
+.vix-error[data-show="true"]{display:block}
+.vix-error strong{display:block;color:var(--red);margin-bottom:2px}
+.vix-table-wrap{margin-top:10px;overflow:auto;max-height:190px;border:1px solid var(--border);border-radius:var(--radius)}
+.vix-table{width:100%;border-collapse:collapse;font-size:10.5px}
+.vix-table th{position:sticky;top:0;z-index:1;padding:7px 8px;text-align:left;background:var(--bg4);color:var(--text3);font-size:9.5px;text-transform:uppercase;letter-spacing:.35px;white-space:nowrap}
+.vix-table td{padding:7px 8px;border-top:1px solid var(--border);vertical-align:top}
+.vix-cell-main{display:block;max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.vix-cell-sub{display:block;margin-top:2px;color:var(--text3);font-size:9.5px}
+.vix-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:var(--radius);font-size:9.5px;font-weight:650;white-space:nowrap}
+.vix-pill[data-state="accepted"]{background:var(--green-soft);color:var(--green)}
+.vix-pill[data-state="rejected"]{background:var(--red-soft);color:var(--red)}
+.vix-empty{display:none;padding:24px 12px;text-align:center;color:var(--text2)}
+.vix-empty[data-show="true"]{display:block}
+.vix-empty strong{display:block;color:var(--text);font-size:12px;margin-bottom:4px}
+.vix-summary{display:flex;flex-direction:column;padding:14px;min-width:0}
+.vix-checks{display:grid;gap:8px;margin:4px 0 12px;padding:0;list-style:none}
+.vix-check{display:grid;grid-template-columns:17px minmax(0,1fr);gap:7px;align-items:start;color:var(--text2);font-size:11px;line-height:1.4}
+.vix-check-mark{display:grid;place-items:center;width:17px;height:17px;border-radius:var(--radius);background:var(--green-soft);color:var(--green);font-size:10px;font-weight:750}
+.vix-export-note{margin-top:auto;padding:9px;border-radius:var(--radius);background:var(--accent-soft);color:var(--text2);font-size:10.5px;line-height:1.45}
+.vix-export-note strong{display:block;color:var(--text);margin-bottom:2px}
+.vix-actions{display:grid;gap:7px;margin-top:10px}
+.vix-status{min-height:16px;margin:7px 0 0;color:var(--text3);font-size:10px;line-height:1.4}
+@media (max-width:620px){.vix-grid{grid-template-columns:1fr}.vix-top{align-items:stretch;flex-direction:column}.vix-fixture{width:100%}}
+@container (max-width:520px){.vix-grid{grid-template-columns:minmax(0,1fr)}.vix-top{align-items:stretch;flex-direction:column}.vix-fixture{width:100%}}
+@media (prefers-reduced-motion:reduce){.vix-root *{transition:none!important}}
+</style>
+<div class="vix-root">
+  <div class="vix-top">
+    <div>
+      <p class="vix-eyebrow">Portable data flow</p>
+      <h3 class="vix-title">Validate before anything changes</h3>
+      <p class="vix-copy">Review every row first. Export always creates a new file.</p>
+    </div>
+    <label>
+      <span class="vix-caption">Demo state</span>
+      <select class="vix-fixture" aria-label="Choose import demo state">
+        <option value="normal">Normal</option>
+        <option value="empty">Empty</option>
+        <option value="many">Many rows</option>
+        <option value="long">Long text</option>
+        <option value="error">File error</option>
+      </select>
+    </label>
+  </div>
+  <div class="vix-grid">
+    <section class="vix-panel" aria-label="File selection and validation preview">
+      <p class="vix-caption">1. Select and validate</p>
+      <div class="vix-pick">
+        <input class="vix-file" type="file" accept=".csv,.json" tabindex="-1">
+        <div class="vix-file-copy">
+          <span class="vix-file-name"></span>
+          <span class="vix-file-hint">CSV or JSON, demo does not read or upload the file</span>
+        </div>
+        <button class="vix-btn vix-choose" type="button">Choose file</button>
+      </div>
+      <div class="vix-stats" aria-label="Validation counts">
+        <div class="vix-stat"><span class="vix-stat-label"><span class="vix-stat-mark" data-kind="accepted" aria-hidden="true">&#10003;</span>Accepted</span><strong class="vix-accepted">0</strong></div>
+        <div class="vix-stat"><span class="vix-stat-label"><span class="vix-stat-mark" data-kind="rejected" aria-hidden="true">!</span>Rejected</span><strong class="vix-rejected">0</strong></div>
+      </div>
+      <div class="vix-progress-wrap">
+        <div class="vix-progress-head"><span class="vix-progress-label">Waiting for a file</span><span class="vix-progress-value">0%</span></div>
+        <div class="vix-progress" role="progressbar" aria-label="Validation progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div class="vix-progress-bar"></div></div>
+      </div>
+      <div class="vix-error" role="alert"><strong>File could not be validated</strong><span class="vix-error-copy"></span></div>
+      <div class="vix-table-wrap">
+        <table class="vix-table">
+          <thead><tr><th scope="col">Record</th><th scope="col">Result</th><th scope="col">Reason</th></tr></thead>
+          <tbody class="vix-rows"></tbody>
+        </table>
+        <div class="vix-empty"><strong>No records to preview</strong><span>Select a populated file or choose another demo state.</span></div>
+      </div>
+    </section>
+    <aside class="vix-summary" aria-label="Safe export summary">
+      <p class="vix-caption">2. Review and export</p>
+      <ul class="vix-checks">
+        <li class="vix-check"><span class="vix-check-mark" aria-hidden="true">&#10003;</span><span>Rejected rows stay excluded and visible in the preview</span></li>
+        <li class="vix-check"><span class="vix-check-mark" aria-hidden="true">&#10003;</span><span>No existing data is overwritten by this demo</span></li>
+        <li class="vix-check"><span class="vix-check-mark" aria-hidden="true">&#10003;</span><span>The export contains accepted rows only</span></li>
+      </ul>
+      <div class="vix-export-note"><strong>New file only</strong>The action prepares a separate synthetic export. It never replaces the selected file.</div>
+      <div class="vix-actions">
+        <button class="vix-btn vix-btn-primary vix-export" type="button">Export accepted rows</button>
+      </div>
+      <p class="vix-status" aria-live="polite"></p>
+    </aside>
+  </div>
+</div>
+<script>
+(function(){
+  var script=document.currentScript;
+  var root=script&&script.parentElement;
+  if(!root)return;
+  var app=root.querySelector('.vix-root');
+  if(!app||app.dataset.ready==='true')return;
+  app.dataset.ready='true';
+  var fixture=app.querySelector('.vix-fixture');
+  var input=app.querySelector('.vix-file');
+  var choose=app.querySelector('.vix-choose');
+  var exportBtn=app.querySelector('.vix-export');
+  var rowsEl=app.querySelector('.vix-rows');
+  var empty=app.querySelector('.vix-empty');
+  var error=app.querySelector('.vix-error');
+  var errorCopy=app.querySelector('.vix-error-copy');
+  var accepted=app.querySelector('.vix-accepted');
+  var rejected=app.querySelector('.vix-rejected');
+  var fileName=app.querySelector('.vix-file-name');
+  var progress=app.querySelector('.vix-progress');
+  var progressBar=app.querySelector('.vix-progress-bar');
+  var progressLabel=app.querySelector('.vix-progress-label');
+  var progressValue=app.querySelector('.vix-progress-value');
+  var status=app.querySelector('.vix-status');
+  var DATA={
+    normal:{file:'workspace-contacts.csv',progress:100,accepted:3,rejected:1,rows:[
+      ['Avery Tan','accepted','Ready'],['Morgan Lee','accepted','Ready'],['Riley Chen','rejected','Email is missing'],['Sam Idris','accepted','Ready']
+    ]},
+    empty:{file:'empty-export.csv',progress:100,accepted:0,rejected:0,rows:[]},
+    many:{file:'team-directory-24-rows.csv',progress:68,accepted:19,rejected:5,rows:[
+      ['Avery Tan','accepted','Ready'],['Morgan Lee','accepted','Ready'],['Riley Chen','rejected','Email is missing'],['Sam Idris','accepted','Ready'],['Jordan Lim','rejected','Duplicate reference'],['Taylor Noor','accepted','Ready'],['Casey Ong','accepted','Ready'],['Robin Koh','rejected','Invalid date format']
+    ]},
+    long:{file:'quarterly-contact-directory-for-regional-partner-review-and-safe-transfer.csv',progress:100,accepted:2,rejected:1,rows:[
+      ['Alexandria-Josephine Montgomery-Watanabe','accepted','Ready'],['Operations liaison for the regional partnership and continuity programme','rejected','Required reference exceeds the configured limit'],['Kai Ramanathan','accepted','Ready']
+    ]},
+    error:{file:'unreadable-archive.json',progress:24,accepted:0,rejected:0,rows:[],error:'The demo file ends before its JSON object closes. Nothing was imported or changed.'}
+  };
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function render(){
+    var data=DATA[fixture.value]||DATA.normal;
+    fileName.textContent=data.file;
+    fileName.title=data.file;
+    accepted.textContent=String(data.accepted);
+    rejected.textContent=String(data.rejected);
+    progress.setAttribute('aria-valuenow',String(data.progress));
+    progressBar.style.width=data.progress+'%';
+    progressValue.textContent=data.progress+'%';
+    progressLabel.textContent=data.progress===100?'Validation complete':(data.progress===0?'Waiting for a file':'Validating safely');
+    error.dataset.show=data.error?'true':'false';
+    errorCopy.textContent=data.error||'';
+    rowsEl.innerHTML=data.rows.map(function(row){
+      var mark=row[1]==='accepted'?'&#10003;':'!';
+      return '<tr><td><span class="vix-cell-main" title="'+esc(row[0])+'">'+esc(row[0])+'</span><span class="vix-cell-sub">Synthetic record</span></td><td><span class="vix-pill" data-state="'+row[1]+'"><span aria-hidden="true">'+mark+'</span>'+esc(row[1])+'</span></td><td>'+esc(row[2])+'</td></tr>';
+    }).join('');
+    empty.dataset.show=data.rows.length?'false':'true';
+    exportBtn.disabled=data.accepted===0||!!data.error;
+    status.textContent=data.error?'Resolve the file error before exporting.':(data.accepted?data.accepted+' accepted row'+(data.accepted===1?' is':'s are')+' ready for a new export.':'Nothing is ready to export.');
+  }
+  fixture.addEventListener('change',render);
+  choose.addEventListener('click',function(){input.click();});
+  input.addEventListener('change',function(){
+    if(!input.files||!input.files.length)return;
+    fileName.textContent=input.files[0].name;
+    fileName.title=input.files[0].name;
+    status.textContent='Selected locally for this preview. The demo did not read or upload it.';
+  });
+  exportBtn.addEventListener('click',function(){
+    var count=(DATA[fixture.value]||DATA.normal).accepted;
+    progress.setAttribute('aria-valuenow','100');
+    progressBar.style.width='100%';
+    progressValue.textContent='100%';
+    progressLabel.textContent='New export prepared';
+    status.textContent='Prepared a separate synthetic export with '+count+' accepted row'+(count===1?'':'s')+'. No existing file was changed.';
+  });
+  render();
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Relationship Graph Explorer" data-category="Systems" data-source="Catalogue source-only evidence: memory-graph-force-directed-relationship-map-explorer at Memory Graph.html:213; projects-flowchart-accessible-collapsible-hierarchy-map at Projects Flowchart.html:1828" data-note="Provisional pilot on house tokens. A dependency-free static force-style map is paired with search, relationship filters, selected-node detail and an accessible table equivalent. Catalogue evidence was inspected source-only, no runtime verification is claimed.">
+<style>
+.rgx-root{container-type:inline-size;width:100%;max-width:760px;display:grid;gap:10px;color:var(--text);font-family:var(--font)}
+.rgx-shell{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);box-shadow:var(--shadow-1)}
+.rgx-head{display:flex;justify-content:space-between;gap:12px;padding:14px;border-bottom:1px solid var(--border)}
+.rgx-eyebrow,.rgx-label{margin:0 0 4px;color:var(--text3);font-size:10px;font-weight:650;letter-spacing:.45px;text-transform:uppercase}
+.rgx-title{margin:0;font-size:17px;line-height:1.25;font-weight:680}
+.rgx-copy{margin:4px 0 0;color:var(--text2);font-size:11.5px;line-height:1.45}
+.rgx-fixture{min-width:108px;padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font:inherit;font-size:11px}
+.rgx-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.rgx-search{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);font:inherit;font-size:11px}
+.rgx-search::placeholder{color:var(--text3)}
+.rgx-filters{display:flex;flex-wrap:wrap;gap:6px}
+.rgx-filter{padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font:inherit;font-size:10.5px;font-weight:620;cursor:pointer}
+.rgx-filter[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--accent)}
+.rgx-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(205px,.65fr);min-height:310px}
+.rgx-map-panel{position:relative;min-width:0;padding:10px;border-right:1px solid var(--border)}
+.rgx-map{display:block;width:100%;height:250px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+.rgx-edge{stroke:var(--border2);stroke-width:1.7}
+.rgx-edge[data-kind="inferred"]{stroke-dasharray:5 4}
+.rgx-node{cursor:pointer;outline:none}
+.rgx-node circle{fill:var(--bg2);stroke:var(--accent);stroke-width:2;transition:fill var(--dur) ease-out,stroke-width var(--dur) ease-out}
+.rgx-node[data-selected="true"] circle{fill:var(--accent-soft);stroke-width:4}
+.rgx-node:focus-visible circle{stroke:var(--blue);stroke-width:4}
+.rgx-node text{fill:var(--text);font-family:var(--font);font-size:9px;font-weight:620;pointer-events:none}
+.rgx-node .rgx-node-kind{fill:var(--text3);font-size:7.5px;font-weight:520}
+.rgx-empty{display:none;position:absolute;inset:10px;place-items:center;text-align:center;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3);color:var(--text2);font-size:11px;line-height:1.45;padding:20px}
+.rgx-empty[data-show="true"]{display:grid}
+.rgx-empty strong{display:block;margin-bottom:4px;color:var(--text);font-size:12px}
+.rgx-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px;color:var(--text3);font-size:9.5px}
+.rgx-legend span{display:inline-flex;align-items:center;gap:5px}
+.rgx-line{width:20px;border-top:2px solid var(--border2)}
+.rgx-line[data-kind="inferred"]{border-top-style:dashed}
+.rgx-detail{display:flex;flex-direction:column;padding:14px;min-width:0}
+.rgx-detail-badge{align-self:flex-start;padding:3px 7px;border-radius:var(--radius);background:var(--accent-soft);color:var(--accent);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.35px}
+.rgx-detail-name{margin:9px 0 3px;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-size:15px;line-height:1.3;font-weight:680}
+.rgx-detail-type{margin:0;color:var(--text3);font-size:10.5px}
+.rgx-detail-copy{margin:12px 0;color:var(--text2);font-size:11px;line-height:1.5}
+.rgx-detail-list{display:grid;gap:7px;margin:0;padding:0;list-style:none;color:var(--text2);font-size:10.5px}
+.rgx-detail-list li{display:flex;justify-content:space-between;gap:8px;padding-top:7px;border-top:1px solid var(--border)}
+.rgx-detail-list strong{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text);font-weight:620}
+.rgx-table-panel{padding:0 14px 14px}
+.rgx-table-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:10px 0 7px}
+.rgx-table-head p{margin:0;color:var(--text3);font-size:9.5px}
+.rgx-table-wrap{overflow:auto;max-height:165px;border:1px solid var(--border);border-radius:var(--radius)}
+.rgx-table{width:100%;border-collapse:collapse;font-size:10.5px}
+.rgx-table th{position:sticky;top:0;padding:7px 8px;text-align:left;background:var(--bg4);color:var(--text3);font-size:9px;text-transform:uppercase;letter-spacing:.35px}
+.rgx-table td{padding:7px 8px;border-top:1px solid var(--border);color:var(--text2)}
+.rgx-select{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border:0;background:none;color:var(--text);font:inherit;font-weight:620;text-align:left;cursor:pointer;padding:2px}
+.rgx-state{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.rgx-state::before{content:'Solid';font-size:8px;font-weight:700;text-transform:uppercase;color:var(--green)}
+.rgx-state[data-kind="inferred"]::before{content:'Dashed';color:var(--amber)}
+.rgx-status{margin:7px 0 0;color:var(--text3);font-size:9.5px;min-height:14px}
+@media (max-width:650px){.rgx-head{flex-direction:column}.rgx-fixture{width:100%}.rgx-toolbar{grid-template-columns:1fr}.rgx-layout{grid-template-columns:1fr}.rgx-map-panel{border-right:0;border-bottom:1px solid var(--border)}}
+@container (max-width:560px){.rgx-head{flex-direction:column}.rgx-fixture{width:100%}.rgx-toolbar{grid-template-columns:minmax(0,1fr)}.rgx-filters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.rgx-layout{grid-template-columns:minmax(0,1fr)}.rgx-map-panel{border-right:0;border-bottom:1px solid var(--border)}}
+@media (prefers-reduced-motion:reduce){.rgx-root *{transition:none!important}}
+</style>
+<div class="rgx-root">
+  <section class="rgx-shell" aria-label="Relationship graph explorer demo">
+    <div class="rgx-head">
+      <div>
+        <p class="rgx-eyebrow">Relationship system</p>
+        <h3 class="rgx-title">Explore connections two ways</h3>
+        <p class="rgx-copy">Use the map for shape, or the table for the same selectable relationships.</p>
+      </div>
+      <label><span class="rgx-label">Demo state</span><select class="rgx-fixture" aria-label="Choose relationship graph demo state"><option value="normal">Normal</option><option value="empty">Empty</option><option value="many">Many nodes</option><option value="long">Long text</option></select></label>
+    </div>
+    <div class="rgx-toolbar">
+      <input class="rgx-search" type="search" placeholder="Search people, teams or work…" aria-label="Search relationship nodes" autocomplete="off">
+      <div class="rgx-filters" role="group" aria-label="Filter relationship type">
+        <button class="rgx-filter" type="button" data-filter="all" aria-pressed="true">All links</button>
+        <button class="rgx-filter" type="button" data-filter="direct" aria-pressed="false">Solid, direct</button>
+        <button class="rgx-filter" type="button" data-filter="inferred" aria-pressed="false">Dashed, inferred</button>
+      </div>
+    </div>
+    <div class="rgx-layout">
+      <div class="rgx-map-panel">
+        <svg class="rgx-map" viewBox="0 0 430 250" role="group" aria-label="Force-style relationship map. Use Tab to reach nodes, then Enter or Space to select."></svg>
+        <div class="rgx-empty"><div><strong>No relationships to show</strong><span class="rgx-empty-copy">Try another state or clear the search.</span></div></div>
+        <div class="rgx-legend" aria-label="Connection style legend"><span><i class="rgx-line" aria-hidden="true"></i>Solid line, direct</span><span><i class="rgx-line" data-kind="inferred" aria-hidden="true"></i>Dashed line, inferred</span></div>
+      </div>
+      <aside class="rgx-detail" aria-label="Selected node detail">
+        <span class="rgx-detail-badge">Selected node</span>
+        <h4 class="rgx-detail-name"></h4>
+        <p class="rgx-detail-type"></p>
+        <p class="rgx-detail-copy"></p>
+        <ul class="rgx-detail-list"><li><span>Visible links</span><strong class="rgx-link-count"></strong></li><li><span>Closest relation</span><strong class="rgx-closest"></strong></li></ul>
+        <p class="rgx-status" aria-live="polite"></p>
+      </aside>
+    </div>
+    <div class="rgx-table-panel">
+      <div class="rgx-table-head"><div><p class="rgx-label">Accessible list equivalent</p><p>Same visible nodes and relationship type as the map</p></div></div>
+      <div class="rgx-table-wrap"><table class="rgx-table"><thead><tr><th scope="col">Node</th><th scope="col">Kind</th><th scope="col">Connection</th><th scope="col">State</th></tr></thead><tbody class="rgx-rows"></tbody></table></div>
+    </div>
+  </section>
+</div>
+<script>
+(function(){
+  var script=document.currentScript;
+  var root=script&&script.parentElement;
+  if(!root)return;
+  var app=root.querySelector('.rgx-root');
+  if(!app||app.dataset.ready==='true')return;
+  app.dataset.ready='true';
+  var svg=app.querySelector('.rgx-map');
+  var rows=app.querySelector('.rgx-rows');
+  var search=app.querySelector('.rgx-search');
+  var fixture=app.querySelector('.rgx-fixture');
+  var empty=app.querySelector('.rgx-empty');
+  var emptyCopy=app.querySelector('.rgx-empty-copy');
+  var detailName=app.querySelector('.rgx-detail-name');
+  var detailType=app.querySelector('.rgx-detail-type');
+  var detailCopy=app.querySelector('.rgx-detail-copy');
+  var linkCount=app.querySelector('.rgx-link-count');
+  var closest=app.querySelector('.rgx-closest');
+  var status=app.querySelector('.rgx-status');
+  var filter='all',selected='atlas';
+  var BASE=[
+    {id:'atlas',name:'Atlas workspace',kind:'Workspace',x:215,y:124,copy:'A synthetic planning workspace connecting teams, notes and delivery work.'},
+    {id:'mira',name:'Mira Chen',kind:'Person',x:86,y:62,copy:'Coordinates research notes and review checkpoints.'},
+    {id:'studio',name:'Studio team',kind:'Team',x:347,y:58,copy:'Owns visual drafts and interaction reviews.'},
+    {id:'launch',name:'Launch checklist',kind:'Work item',x:350,y:192,copy:'Tracks synthetic release-readiness checks.'},
+    {id:'research',name:'Research notes',kind:'Document',x:82,y:190,copy:'Holds invented findings for this demonstration.'}
+  ];
+  var EXTRA=[
+    {id:'ops',name:'Operations',kind:'Team',x:215,y:32,copy:'Coordinates routine checks.'},{id:'brief',name:'Project brief',kind:'Document',x:38,y:124,copy:'Defines the synthetic scope.'},{id:'qa',name:'Quality review',kind:'Work item',x:393,y:124,copy:'Records demo checks.'},{id:'sam',name:'Sam Idris',kind:'Person',x:145,y:224,copy:'Reviews dependencies.'},{id:'kai',name:'Kai Raman',kind:'Person',x:283,y:225,copy:'Tracks decisions.'},{id:'archive',name:'Archive notes',kind:'Document',x:145,y:25,copy:'Keeps closed demo notes.'},{id:'risk',name:'Risk register',kind:'Document',x:286,y:25,copy:'Lists synthetic risks.'}
+  ];
+  var LINKS=[
+    {a:'atlas',b:'mira',kind:'direct'},{a:'atlas',b:'studio',kind:'direct'},{a:'atlas',b:'launch',kind:'direct'},{a:'atlas',b:'research',kind:'inferred'},{a:'mira',b:'research',kind:'direct'},{a:'studio',b:'launch',kind:'inferred'},
+    {a:'atlas',b:'ops',kind:'direct'},{a:'atlas',b:'brief',kind:'direct'},{a:'atlas',b:'qa',kind:'inferred'},{a:'research',b:'sam',kind:'direct'},{a:'launch',b:'kai',kind:'direct'},{a:'mira',b:'archive',kind:'inferred'},{a:'studio',b:'risk',kind:'direct'}
+  ];
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function currentNodes(){
+    if(fixture.value==='empty')return [];
+    if(fixture.value==='many')return BASE.concat(EXTRA);
+    if(fixture.value==='long')return BASE.map(function(node){return node.id==='atlas'?Object.assign({},node,{name:'Atlas cross-functional planning and continuity workspace for regional programme review',copy:'A deliberately long synthetic node description to prove that selected detail and the table contain text without hiding its meaning.'}):node;});
+    return BASE;
+  }
+  function shortName(name){return name.length>20?name.slice(0,18)+'…':name;}
+  function getVisible(){
+    var nodes=currentNodes();
+    var term=search.value.trim().toLowerCase();
+    var nodeMap={};nodes.forEach(function(node){nodeMap[node.id]=node;});
+    var links=LINKS.filter(function(link){return nodeMap[link.a]&&nodeMap[link.b]&&(filter==='all'||link.kind===filter);});
+    if(!term)return {nodes:nodes,links:links};
+    var matches={};nodes.forEach(function(node){if((node.name+' '+node.kind+' '+node.copy).toLowerCase().indexOf(term)>=0)matches[node.id]=true;});
+    var keptLinks=links.filter(function(link){return matches[link.a]||matches[link.b];});
+    var keep={};keptLinks.forEach(function(link){keep[link.a]=true;keep[link.b]=true;});
+    Object.keys(matches).forEach(function(id){keep[id]=true;});
+    return {nodes:nodes.filter(function(node){return keep[node.id];}),links:keptLinks};
+  }
+  function selectNode(id){selected=id;render();var button=rows.querySelector('[data-node="'+id+'"]');if(button)button.focus();}
+  function render(){
+    var visible=getVisible();
+    if(!visible.nodes.some(function(node){return node.id===selected;}))selected=visible.nodes.length?visible.nodes[0].id:'';
+    var map={};visible.nodes.forEach(function(node){map[node.id]=node;});
+    var edges=visible.links.map(function(link){var a=map[link.a],b=map[link.b];return '<line class="rgx-edge" data-kind="'+link.kind+'" x1="'+a.x+'" y1="'+a.y+'" x2="'+b.x+'" y2="'+b.y+'"><title>'+esc(a.name)+' to '+esc(b.name)+', '+link.kind+'</title></line>';}).join('');
+    var nodes=visible.nodes.map(function(node){var selectedText=node.id===selected?', selected':'';return '<g class="rgx-node" data-node="'+esc(node.id)+'" data-selected="'+(node.id===selected?'true':'false')+'" tabindex="0" role="button" aria-label="'+esc(node.name)+', '+esc(node.kind)+selectedText+'"><circle cx="'+node.x+'" cy="'+node.y+'" r="25"></circle><text x="'+node.x+'" y="'+(node.y-1)+'" text-anchor="middle">'+esc(shortName(node.name))+'</text><text class="rgx-node-kind" x="'+node.x+'" y="'+(node.y+11)+'" text-anchor="middle">'+esc(node.kind)+'</text></g>';}).join('');
+    svg.innerHTML=edges+nodes;
+    rows.innerHTML=visible.nodes.map(function(node){var related=visible.links.filter(function(link){return link.a===node.id||link.b===node.id;});var relation=related.length?related[0].kind:'none';return '<tr><td><button type="button" class="rgx-select" data-node="'+esc(node.id)+'" aria-pressed="'+(node.id===selected?'true':'false')+'" title="'+esc(node.name)+'">'+esc(node.name)+'</button></td><td>'+esc(node.kind)+'</td><td>'+related.length+'</td><td>'+(relation==='none'?'No visible link':'<span class="rgx-state" data-kind="'+relation+'">'+relation+'</span>')+'</td></tr>';}).join('');
+    empty.dataset.show=visible.nodes.length?'false':'true';
+    emptyCopy.textContent=fixture.value==='empty'?'This synthetic workspace has no nodes yet. Choose another demo state to explore.':'No node or connection matches the current search and filter.';
+    var active=map[selected];
+    if(active){
+      var activeLinks=visible.links.filter(function(link){return link.a===selected||link.b===selected;});
+      var peer=activeLinks.length?map[activeLinks[0].a===selected?activeLinks[0].b:activeLinks[0].a]:null;
+      detailName.textContent=active.name;detailName.title=active.name;detailType.textContent=active.kind;detailCopy.textContent=active.copy;linkCount.textContent=String(activeLinks.length);closest.textContent=peer?peer.name:'None visible';closest.title=peer?peer.name:'';status.textContent=active.name+' selected in map and table.';
+    }else{detailName.textContent='Nothing selected';detailType.textContent='Empty state';detailCopy.textContent='Choose a populated demo state or clear the search.';linkCount.textContent='0';closest.textContent='None';status.textContent='No visible nodes.';}
+  }
+  app.querySelector('.rgx-filters').addEventListener('click',function(event){var button=event.target.closest('.rgx-filter');if(!button)return;filter=button.dataset.filter;app.querySelectorAll('.rgx-filter').forEach(function(item){item.setAttribute('aria-pressed',item===button?'true':'false');});render();});
+  svg.addEventListener('click',function(event){var node=event.target.closest('.rgx-node');if(node)selectNode(node.dataset.node);});
+  svg.addEventListener('keydown',function(event){var node=event.target.closest('.rgx-node');if(node&&(event.key==='Enter'||event.key===' ')){event.preventDefault();selectNode(node.dataset.node);}});
+  rows.addEventListener('click',function(event){var button=event.target.closest('.rgx-select');if(button)selectNode(button.dataset.node);});
+  search.addEventListener('input',render);
+  fixture.addEventListener('change',function(){search.value='';selected='atlas';render();});
+  render();
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Page Tree and Move Controls" data-category="Flows" data-source="Catalogue source-only evidence: journal-page-tree-nesting-ordering-icons-covers-and-pins at Kujira/Journal/index.html:14305" data-note="Provisional pilot on house tokens. It extends a searchable accessible page tree with a guarded move preview, move into and move back out controls, long-name containment and an explicit empty state. Catalogue evidence was inspected source-only, no runtime verification is claimed.">
+<style>
+.ptm-root{container-type:inline-size;width:100%;max-width:720px;color:var(--text);font-family:var(--font)}
+.ptm-shell{overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);box-shadow:var(--shadow-1)}
+.ptm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px;border-bottom:1px solid var(--border)}
+.ptm-eyebrow,.ptm-caption{margin:0 0 4px;color:var(--text3);font-size:10px;font-weight:650;letter-spacing:.45px;text-transform:uppercase}
+.ptm-title{margin:0;font-size:17px;line-height:1.25;font-weight:680}
+.ptm-copy{margin:4px 0 0;color:var(--text2);font-size:11.5px;line-height:1.45}
+.ptm-fixture,.ptm-target{padding:7px 9px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text);font:inherit;font-size:11px}
+.ptm-fixture{min-width:108px}
+.ptm-search-wrap{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.ptm-search{width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);font:inherit;font-size:11px}
+.ptm-search::placeholder{color:var(--text3)}
+.ptm-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(230px,.8fr);min-height:315px}
+.ptm-tree-panel{padding:12px 8px 12px 14px;border-right:1px solid var(--border);min-width:0}
+.ptm-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 6px 7px 2px}
+.ptm-count{color:var(--text3);font-size:9.5px}
+.ptm-tree{max-height:270px;overflow:auto;padding-right:6px}
+.ptm-row{display:flex;align-items:center;gap:4px;min-width:0;border-radius:var(--radius);padding:3px 4px}
+.ptm-row:hover{background:var(--bg3)}
+.ptm-toggle{display:grid;place-items:center;flex:0 0 24px;height:24px;padding:0;border:0;border-radius:var(--radius);background:none;color:var(--text3);font:inherit;cursor:pointer}
+.ptm-toggle:hover{background:var(--bg4);color:var(--text)}
+.ptm-toggle[data-open="true"] .ptm-chevron{transform:rotate(90deg)}
+.ptm-chevron{display:block;transition:transform var(--dur) ease-out}
+.ptm-toggle-spacer{flex:0 0 24px;height:24px}
+.ptm-page{display:flex;align-items:center;gap:7px;min-width:0;flex:1;padding:6px 7px;border:1px solid transparent;border-radius:var(--radius);background:none;color:var(--text2);font:inherit;font-size:11px;text-align:left;cursor:pointer}
+.ptm-page[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.ptm-page-icon{flex:0 0 auto;color:var(--text3)}
+.ptm-page-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ptm-empty{display:none;margin:8px 6px;padding:24px 12px;text-align:center;border:1px dashed var(--border2);border-radius:var(--radius);color:var(--text2);font-size:11px;line-height:1.45}
+.ptm-empty[data-show="true"]{display:block}
+.ptm-empty strong{display:block;margin-bottom:4px;color:var(--text);font-size:12px}
+.ptm-clear{margin-top:9px;padding:6px 9px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--text);font:inherit;font-size:10.5px;cursor:pointer}
+.ptm-move{display:flex;flex-direction:column;padding:14px;min-width:0}
+.ptm-selected{padding:10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+.ptm-selected-label{display:block;color:var(--text3);font-size:9.5px}
+.ptm-selected-name{display:block;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;font-weight:650}
+.ptm-field{display:grid;gap:5px;margin-top:12px;color:var(--text2);font-size:10.5px}
+.ptm-target{width:100%;min-width:0}
+.ptm-preview{margin:10px 0 0;padding:9px;border-radius:var(--radius);background:var(--blue-soft);color:var(--text2);font-size:10.5px;line-height:1.45}
+.ptm-preview strong{display:block;color:var(--text);margin-bottom:2px}
+.ptm-actions{display:grid;grid-template-columns:1fr;gap:7px;margin-top:10px}
+.ptm-btn{padding:8px 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg4);color:var(--text);font:inherit;font-size:10.5px;font-weight:650;cursor:pointer}
+.ptm-btn-primary{border-color:var(--accent);background:var(--accent);color:var(--onacc)}
+.ptm-btn:hover{border-color:var(--accent)}
+.ptm-btn:disabled{cursor:not-allowed;opacity:.5}
+.ptm-safety{margin-top:auto;padding-top:12px;color:var(--text3);font-size:9.5px;line-height:1.45}
+.ptm-safety strong{color:var(--green)}
+.ptm-status{min-height:28px;margin:7px 0 0;color:var(--text2);font-size:10px;line-height:1.4}
+@media (max-width:620px){.ptm-head{flex-direction:column}.ptm-fixture{width:100%}.ptm-layout{grid-template-columns:1fr}.ptm-tree-panel{border-right:0;border-bottom:1px solid var(--border)}}
+@container (max-width:520px){.ptm-head{flex-direction:column}.ptm-fixture{width:100%}.ptm-layout{grid-template-columns:minmax(0,1fr)}.ptm-tree-panel{border-right:0;border-bottom:1px solid var(--border)}}
+@media (prefers-reduced-motion:reduce){.ptm-root *{transition:none!important}}
+</style>
+<div class="ptm-root">
+  <section class="ptm-shell" aria-label="Page tree and move controls demo">
+    <div class="ptm-head">
+      <div><p class="ptm-eyebrow">Reversible organisation flow</p><h3 class="ptm-title">Find a page, preview its move</h3><p class="ptm-copy">Movement stays local to this synthetic demo and can be moved back out.</p></div>
+      <label><span class="ptm-caption">Demo state</span><select class="ptm-fixture" aria-label="Choose page tree demo state"><option value="normal">Normal</option><option value="empty">Empty</option><option value="many">Many pages</option><option value="long">Long names</option></select></label>
+    </div>
+    <div class="ptm-search-wrap"><input class="ptm-search" type="search" placeholder="Search pages…" aria-label="Search pages" autocomplete="off"></div>
+    <div class="ptm-layout">
+      <div class="ptm-tree-panel">
+        <div class="ptm-section-head"><p class="ptm-caption">Workspace pages</p><span class="ptm-count"></span></div>
+        <div class="ptm-tree" role="tree" aria-label="Synthetic workspace pages"></div>
+        <div class="ptm-empty"><strong>No pages found</strong><span class="ptm-empty-copy"></span><br><button class="ptm-clear" type="button">Clear search</button></div>
+      </div>
+      <aside class="ptm-move" aria-label="Move selected page">
+        <p class="ptm-caption">Move controls</p>
+        <div class="ptm-selected"><span class="ptm-selected-label">Selected page</span><span class="ptm-selected-name"></span></div>
+        <label class="ptm-field"><span>Move into</span><select class="ptm-target"></select></label>
+        <div class="ptm-preview"><strong>Preview only until confirmed</strong><span class="ptm-preview-copy"></span></div>
+        <div class="ptm-actions"><button class="ptm-btn ptm-btn-primary ptm-move-in" type="button">Move into selected section</button><button class="ptm-btn ptm-move-out" type="button">Move back out one level</button></div>
+        <p class="ptm-status" aria-live="polite"></p>
+        <p class="ptm-safety"><strong>Reversible demo</strong><br>No page content is deleted or overwritten. Only the synthetic parent link changes.</p>
+      </aside>
+    </div>
+  </section>
+</div>
+<script>
+(function(){
+  var script=document.currentScript;
+  var root=script&&script.parentElement;
+  if(!root)return;
+  var app=root.querySelector('.ptm-root');
+  if(!app||app.dataset.ready==='true')return;
+  app.dataset.ready='true';
+  var tree=app.querySelector('.ptm-tree');
+  var search=app.querySelector('.ptm-search');
+  var fixture=app.querySelector('.ptm-fixture');
+  var target=app.querySelector('.ptm-target');
+  var moveIn=app.querySelector('.ptm-move-in');
+  var moveOut=app.querySelector('.ptm-move-out');
+  var empty=app.querySelector('.ptm-empty');
+  var emptyCopy=app.querySelector('.ptm-empty-copy');
+  var clear=app.querySelector('.ptm-clear');
+  var count=app.querySelector('.ptm-count');
+  var selectedName=app.querySelector('.ptm-selected-name');
+  var preview=app.querySelector('.ptm-preview-copy');
+  var status=app.querySelector('.ptm-status');
+  var CORE=[
+    {id:'home',name:'Home',parent:null,folder:true},{id:'projects',name:'Projects',parent:null,folder:true},{id:'launch',name:'Launch plan',parent:'projects',folder:false},{id:'research',name:'Research',parent:'projects',folder:true},{id:'interviews',name:'Interview notes',parent:'research',folder:false},{id:'archive',name:'Archive',parent:null,folder:true},{id:'decisions',name:'Decision log',parent:null,folder:false}
+  ];
+  var MANY=[
+    {id:'roadmap',name:'Roadmap',parent:'projects',folder:false},{id:'weekly',name:'Weekly reviews',parent:'projects',folder:true},{id:'w1',name:'Week one',parent:'weekly',folder:false},{id:'w2',name:'Week two',parent:'weekly',folder:false},{id:'assets',name:'Assets',parent:null,folder:true},{id:'copy',name:'Copy drafts',parent:'assets',folder:false},{id:'visuals',name:'Visual notes',parent:'assets',folder:false},{id:'handoff',name:'Handoff checklist',parent:null,folder:false}
+  ];
+  var selected='launch',nodes=[],parents={},expanded={projects:true,research:true,archive:false};
+  function esc(value){return String(value==null?'':value).replace(/[&<>"']/g,function(char){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char];});}
+  function load(){
+    nodes=fixture.value==='empty'?[]:CORE.map(function(node){return Object.assign({},node);});
+    if(fixture.value==='many')nodes=nodes.concat(MANY.map(function(node){return Object.assign({},node);}));
+    if(fixture.value==='long')nodes=nodes.map(function(node){return node.id==='launch'?Object.assign({},node,{name:'Regional partnership launch plan with dependency review and continuity handover notes'}):node;});
+    parents={};nodes.forEach(function(node){parents[node.id]=node.parent;});
+    selected=nodes.some(function(node){return node.id==='launch';})?'launch':(nodes[0]?nodes[0].id:'');
+    expanded={projects:true,research:true,archive:false,weekly:true,assets:true};
+  }
+  function byId(id){for(var i=0;i<nodes.length;i++)if(nodes[i].id===id)return nodes[i];return null;}
+  function childrenOf(id){return nodes.filter(function(node){return parents[node.id]===id;});}
+  function descendants(id,result){result=result||{};childrenOf(id).forEach(function(node){result[node.id]=true;descendants(node.id,result);});return result;}
+  function visibleRows(){
+    var term=search.value.trim().toLowerCase();
+    var keep={};
+    if(term){nodes.forEach(function(node){if(node.name.toLowerCase().indexOf(term)>=0){keep[node.id]=true;var parent=parents[node.id];while(parent){keep[parent]=true;expanded[parent]=true;parent=parents[parent];}}});}
+    var rows=[];
+    function walk(parent,depth){childrenOf(parent).forEach(function(node){if(term&&!keep[node.id])return;rows.push({node:node,depth:depth});if(node.folder&&expanded[node.id])walk(node.id,depth+1);});}
+    walk(null,0);return rows;
+  }
+  function updateTargets(){
+    var blocked=descendants(selected,{});blocked[selected]=true;
+    var choices=nodes.filter(function(node){return node.folder&&!blocked[node.id];});
+    target.innerHTML='';
+    choices.forEach(function(node){var option=document.createElement('option');option.value=node.id;option.textContent=node.name;target.appendChild(option);});
+    if(choices.length&&parents[selected]!==choices[0].id){target.value=choices[0].id;}
+  }
+  function render(){
+    var rows=visibleRows();
+    tree.innerHTML=rows.map(function(row){var node=row.node;var hasChildren=childrenOf(node.id).length>0;var toggle=node.folder?'<button type="button" class="ptm-toggle" data-toggle="'+esc(node.id)+'" data-open="'+(expanded[node.id]?'true':'false')+'" aria-expanded="'+(expanded[node.id]?'true':'false')+'" aria-label="'+(expanded[node.id]?'Collapse ':'Expand ')+esc(node.name)+'"><span class="ptm-chevron" aria-hidden="true">&#8250;</span></button>':'<span class="ptm-toggle-spacer" aria-hidden="true"></span>';return '<div class="ptm-row" role="treeitem" aria-level="'+(row.depth+1)+'"'+(node.folder&&hasChildren?' aria-expanded="'+(expanded[node.id]?'true':'false')+'"':'')+' style="padding-left:'+(row.depth*16)+'px">'+toggle+'<button type="button" class="ptm-page" data-page="'+esc(node.id)+'" aria-pressed="'+(node.id===selected?'true':'false')+'" title="'+esc(node.name)+'"><span class="ptm-page-icon" aria-hidden="true">'+(node.folder?'&#9638;':'&#9649;')+'</span><span class="ptm-page-name">'+esc(node.name)+'</span></button></div>';}).join('');
+    empty.dataset.show=rows.length?'false':'true';
+    emptyCopy.textContent=fixture.value==='empty'?'This synthetic workspace has no pages yet. Choose another demo state to continue.':'No page matches "'+search.value.trim()+'".';
+    clear.hidden=fixture.value==='empty';
+    count.textContent=nodes.length+' page'+(nodes.length===1?'':'s');
+    var active=byId(selected);
+    selectedName.textContent=active?active.name:'No page selected';selectedName.title=active?active.name:'';
+    updateTargets();
+    var destination=byId(target.value);
+    preview.textContent=active&&destination?active.name+' will become a child of '+destination.name+'. No content changes.':'Choose a page and an eligible section.';
+    moveIn.disabled=!active||!destination;
+    moveOut.disabled=!active||parents[selected]===null||parents[selected]===undefined;
+    if(!active)status.textContent='Choose a populated demo state before moving a page.';
+  }
+  tree.addEventListener('click',function(event){
+    var toggle=event.target.closest('.ptm-toggle');
+    if(toggle){expanded[toggle.dataset.toggle]=!expanded[toggle.dataset.toggle];render();return;}
+    var page=event.target.closest('.ptm-page');
+    if(page){selected=page.dataset.page;status.textContent=byId(selected).name+' selected.';render();}
+  });
+  search.addEventListener('input',render);
+  fixture.addEventListener('change',function(){search.value='';load();status.textContent='Demo state changed. Synthetic hierarchy reset.';render();});
+  target.addEventListener('change',render);
+  clear.addEventListener('click',function(){search.value='';search.focus();render();});
+  moveIn.addEventListener('click',function(){var destination=byId(target.value),active=byId(selected);if(!destination||!active)return;parents[selected]=destination.id;expanded[destination.id]=true;status.textContent=active.name+' moved into '+destination.name+' in this demo. Use Move back out to reverse one level.';render();});
+  moveOut.addEventListener('click',function(){var active=byId(selected),oldParent=byId(parents[selected]);if(!active||!oldParent)return;parents[selected]=parents[oldParent.id]||null;status.textContent=active.name+' moved back out of '+oldParent.name+'. No page content changed.';render();});
+  load();render();
 })();
 </script>
 </template>

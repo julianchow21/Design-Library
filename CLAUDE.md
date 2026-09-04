@@ -1,12 +1,12 @@
-# Pattern Library
+# Design Library
 
-Reusable UI/UX pattern library. Single-file gallery in `index.html`, opens straight from `file://`.
+Reusable UI/UX design library. Single-file gallery in `index.html`, opens straight from `file://`.
 
 ## Purpose
 
 Julian pastes Inspect-panel code from sites he admires. The session model re-implements it clean on house tokens (`tokens.css`), and the clean pattern gets stored here for reuse in future Kujira projects.
 
-This library is the sole home for reusable UI ideas (the root CLAUDE.md routes them here). Boundary with the starter: `web-app-starter/workbench.html` demos only the starter's own shipped `lib/` engines, everything else reusable lives here. Patterns proven in real projects flow onward via the Promotion rule below.
+This library is the sole home for reusable UI ideas (the root CLAUDE.md routes them here). Boundary with the starter: `App Starter/workbench.html` demos only the starter's own shipped `lib/` engines, everything else reusable lives here. Patterns proven in real projects flow onward via the Promotion rule below.
 
 ## Intake rule
 
@@ -51,7 +51,7 @@ Five review questions for any direction:
 
 ## Promotion rule
 
-A pattern proven useful across two or more real projects gets promoted into `templates/web-app-starter/` as a first-class piece of the starter (its own CSS block or a documented snippet), not left only here. Leave the copy here too, the library stays the full catalogue.
+A pattern proven useful across two or more real projects gets promoted into `templates/App Starter/` as a first-class piece of the starter (its own CSS block or a documented snippet), not left only here. Leave the copy here too, the library stays the full catalogue.
 
 ## Floors, not ceilings
 
