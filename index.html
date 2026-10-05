@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.11 (31 Aug)</span>
+  <span class="ver">v1.12 (5 Sep)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -7732,6 +7732,21 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
   load();render();
 })();
 </script>
+</template>
+<template class="pattern" data-title="Workspace Shell" data-category="Systems" data-source="DeepSeek Harness UI reference, Odysseus theme" data-note="A quiet sidebar and centred conversation, with a read-only composer. Synthetic content, shown in the gallery light and dark themes.">
+<style>
+.card:has(.ws-root){grid-column:1/-1;container-type:inline-size}
+.ws-root{display:grid;grid-template-columns:210px minmax(0,1fr);min-height:420px;container-type:inline-size;overflow:hidden;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg);color:var(--text);font-family:var(--font);width:100%;box-sizing:border-box}
+.ws-sidebar{background:var(--bg2);border-right:1px solid var(--border);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ws-brand{font-weight:650}.ws-caption{font-size:11px;color:var(--text3)}.ws-rows{display:flex;flex-direction:column;gap:4px}.ws-row{padding:9px 10px;color:var(--text2);overflow-wrap:anywhere}.ws-row:first-child{background:var(--accent-soft);color:var(--accent2);border-radius:var(--radius)}.ws-settings{margin-top:auto;padding-top:12px;border-top:1px solid var(--border);color:var(--text2)}
+.ws-chat{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-width:0}.ws-header{padding:16px;border-bottom:1px solid var(--border)}.ws-title{font-weight:620}.ws-transcript{padding:16px;display:flex;flex-direction:column;gap:16px;min-width:0;overflow:auto;overflow-wrap:anywhere}.ws-message{max-width:80%;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-lg);overflow-wrap:anywhere}.ws-message.user{align-self:flex-end;background:var(--bg3)}.ws-message.assistant{max-width:none;padding:0;border:0;color:var(--text2)}
+.ws-composer{margin:16px;padding:12px;border:1px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg2);box-shadow:var(--shadow-1)}.ws-composer textarea{display:block;width:100%;border:0;resize:none;font:inherit;color:var(--text2);background:transparent}.ws-composer textarea:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}.ws-footer{display:flex;justify-content:space-between;color:var(--text3);font-size:11px;margin-top:10px}
+@container (max-width:620px){.ws-root{grid-template-columns:minmax(0,1fr)}.ws-sidebar{border-right:0;border-bottom:1px solid var(--border)}.ws-chat{min-width:0}}
+</style>
+<div class="ws-root">
+  <aside class="ws-sidebar"><div class="ws-brand">Odysseus</div><div class="ws-caption">Conversations</div><div class="ws-rows"><div class="ws-row">Workspace review</div><div class="ws-row">Planning notes</div><div class="ws-row">A long conversation title that wraps within the sidebar</div></div><div class="ws-settings">Settings</div></aside>
+  <section class="ws-chat"><header class="ws-header"><div class="ws-title">Workspace review</div><div class="ws-caption">Local workspace</div></header><div class="ws-transcript"><div class="ws-message user">Give me a short checklist for this workspace.</div><div class="ws-message assistant">Review the changed files, run the focused checks and inspect the preview.</div><div class="ws-message user">Keep the results together so the next person can continue.</div></div><div class="ws-composer"><label class="ws-caption" for="ws-preview">Message preview</label><textarea id="ws-preview" rows="2" readonly>Ask about this workspace...</textarea><div class="ws-footer"><span>Workspace</span><span>Preview</span></div></div></section>
+</div>
 </template>
 
 <div id="toasts" aria-live="polite"></div>
