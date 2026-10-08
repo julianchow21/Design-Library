@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.12 (5 Sep)</span>
+  <span class="ver">v1.13 (8 Oct)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -7746,6 +7746,283 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
 <div class="ws-root">
   <aside class="ws-sidebar"><div class="ws-brand">Odysseus</div><div class="ws-caption">Conversations</div><div class="ws-rows"><div class="ws-row">Workspace review</div><div class="ws-row">Planning notes</div><div class="ws-row">A long conversation title that wraps within the sidebar</div></div><div class="ws-settings">Settings</div></aside>
   <section class="ws-chat"><header class="ws-header"><div class="ws-title">Workspace review</div><div class="ws-caption">Local workspace</div></header><div class="ws-transcript"><div class="ws-message user">Give me a short checklist for this workspace.</div><div class="ws-message assistant">Review the changed files, run the focused checks and inspect the preview.</div><div class="ws-message user">Keep the results together so the next person can continue.</div></div><div class="ws-composer"><label class="ws-caption" for="ws-preview">Message preview</label><textarea id="ws-preview" rows="2" readonly>Ask about this workspace...</textarea><div class="ws-footer"><span>Workspace</span><span>Preview</span></div></div></section>
+</div>
+</template>
+
+<!-- ============================================================================
+     FROM ODYSSEUS HOME, Components. Hero Composer, Today Tile and Session Card,
+     clean rebuilds on house tokens, synthetic demo copy only.
+     ========================================================================== -->
+
+<template class="pattern" data-title="Hero Composer" data-category="Components" data-source="Odysseus Home v1.0.50, static/home.css and static/js/home.js" data-note="Large composer for a home screen. A two-row message box on a raised card with one toolbar under it. Left of the toolbar sit an attach button, a scope chip (which projects a message can draw on) and a route chip (where the answer is computed). The route chip reads Local with a filled lock, Cloud with an outlined cloud, or Choose a model with no icon, so the words and the icon shape carry the meaning and the green and blue tints only add to it. Right of the toolbar sit an Ask, Agent, Research switch (aria-pressed, exactly one on) that swaps the placeholder per mode and never touches typed text, then the send button, the only accent fill in the card. A row of key caps sits underneath and hides on touch screens. Chips cut long labels with an ellipsis, the toolbar wraps on narrow widths, and every control reaches 44px high under 600px wide. The mode switch is the only scripted part. The strip under the hints is demo only, it shows the chip states side by side. Synthetic copy throughout.">
+<style>
+/* Hero Composer, class prefix hrc-. Tokens only. Icons are plain strokes at the Icon System tiers, 16 for buttons, 14 for chips, 12 for carets. */
+/* Gallery only: give this card the full row so the toolbar shows at a real width. Delete this one rule when you copy the pattern. */
+.card:has(.hrc-wrap){grid-column:1/-1}
+.hrc-wrap{width:100%;max-width:760px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.hrc-ico{display:block;flex:none}
+.hrc-card{box-sizing:border-box;padding:16px 14px 12px 16px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius-lg);box-shadow:var(--shadow-1)}
+.hrc-input{display:block;box-sizing:border-box;width:100%;min-height:calc(3em + 4px);max-height:min(40vh,240px);margin:0;padding:2px;border:0;background:transparent;color:var(--text);font:inherit;font-size:16px;line-height:1.5;resize:none;field-sizing:content}
+.hrc-input::placeholder{color:var(--text3);opacity:1}
+.hrc-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:12px}
+.hrc-left{display:flex;flex:1 1 auto;flex-wrap:wrap;align-items:center;gap:8px;min-width:0}
+.hrc-right{display:flex;align-items:center;gap:8px;margin-left:auto}
+.hrc-icon-btn{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin:0;padding:0;border:0;border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out,transform var(--dur) var(--spring)}
+.hrc-icon-btn:hover{background:var(--bg4);color:var(--text)}
+.hrc-icon-btn:active{transform:scale(.94)}
+.hrc-chip{display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;min-width:0;max-width:min(100%,260px);height:30px;margin:0;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text2);font:inherit;font-size:13px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.hrc-chip:hover{background:var(--bg4);color:var(--text)}
+.hrc-chip-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrc-caret{color:var(--text3)}
+.hrc-chip[data-route="local"] .hrc-route-ico{color:var(--green)}
+.hrc-chip[data-route="cloud"] .hrc-route-ico{color:var(--blue)}
+.hrc-mode{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+.hrc-seg{box-sizing:border-box;height:28px;margin:0;padding:0 12px;border:0;border-radius:calc(var(--radius) - 3px);background:transparent;color:var(--text2);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.hrc-seg:hover{color:var(--text)}
+.hrc-seg[aria-pressed="true"]{background:var(--bg4);box-shadow:inset 0 0 0 1px var(--border2);color:var(--text)}
+.hrc-send{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin:0;padding:0;border:0;border-radius:var(--radius);background:linear-gradient(135deg,var(--accent),var(--grad-2));color:var(--onacc);cursor:pointer;transition:filter var(--dur) ease-out,transform var(--dur) var(--spring)}
+.hrc-send:hover{filter:brightness(1.08)}
+.hrc-send:active{transform:scale(.94)}
+.hrc-icon-btn:focus-visible,.hrc-chip:focus-visible,.hrc-seg:focus-visible,.hrc-send:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* The card carries the focus ring for the message box, so the box drops its own. Browsers without :has() keep the box's ring. */
+@supports selector(:has(*)){
+  .hrc-input:focus-visible{outline:none}
+  .hrc-card:has(.hrc-input:focus-visible){outline:2px solid var(--accent2);outline-offset:2px}
+}
+.hrc-hint{display:flex;flex-wrap:wrap;gap:6px 18px;padding:0 6px;font-size:12px;color:var(--text2)}
+.hrc-key{display:inline-block;min-width:20px;margin-right:6px;padding:1px 5px;border:1px solid var(--border2);border-bottom-width:2px;border-radius:calc(var(--radius) - 4px);background:var(--bg3);color:var(--text);font:inherit;font-size:11px;line-height:1.4;text-align:center}
+.hrc-states{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:4px;padding:12px 6px 0;border-top:1px solid var(--border)}
+.hrc-states-label{flex:none;margin-right:4px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+/* Key caps mean nothing on a touch screen, so the hint row goes there. */
+@media (pointer:coarse){.hrc-hint{display:none}}
+/* Touch sizes. Phones and tablets get 44px targets, and send matches the 52px tall mode switch. */
+@media (max-width:600px),(pointer:coarse){
+  .hrc-icon-btn{width:44px;height:44px}
+  .hrc-chip{height:44px}
+  .hrc-seg{height:44px}
+  .hrc-send{width:52px;height:52px}
+}
+/* Phones. The mode switch and send take their own full row under the chips. On a very narrow card send wraps to its own row instead of being squeezed. */
+@media (max-width:600px){
+  .hrc-card{padding:14px 12px 12px 14px}
+  .hrc-right{width:100%;flex-wrap:wrap;align-items:stretch}
+  .hrc-mode{flex:1 1 auto}
+  .hrc-seg{flex:1 1 0}
+  .hrc-send{flex:none;height:auto;min-height:52px;margin-left:auto}
+}
+@media (max-width:360px){
+  .hrc-seg{padding:0 10px}
+}
+/* The box grows to fit its placeholder where field-sizing exists. Elsewhere it stays at two rows, so on phones leave room for a placeholder that wraps to three lines, or four on the narrowest cards. */
+@supports not (field-sizing:content){
+  @media (max-width:600px){.hrc-input{min-height:calc(4.5em + 4px)}}
+  @media (max-width:360px){.hrc-input{min-height:calc(6em + 4px)}}
+}
+</style>
+<div class="hrc-wrap">
+  <div class="hrc-card">
+    <textarea class="hrc-input" rows="2" autocomplete="off" aria-label="Message the assistant" placeholder="Ask anything, or search across every project&hellip;"></textarea>
+    <div class="hrc-bar">
+      <div class="hrc-left">
+        <button type="button" class="hrc-icon-btn" aria-label="Attach files" title="Attach files">
+          <svg class="hrc-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 8.5v8a3.5 3.5 0 0 1-7 0V6.5a2.25 2.25 0 0 1 4.5 0V16a1 1 0 0 1-2 0V9"/></svg>
+        </button>
+        <button type="button" class="hrc-chip" data-scope="all" aria-label="Scope: All projects. Choose workspace" title="Scope: all projects">
+          <svg class="hrc-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="hrc-chip-label">All projects</span>
+          <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+        <button type="button" class="hrc-chip" data-route="local" aria-label="Model route: Local, Demo model. Change model" title="Local endpoint, Demo model">
+          <svg class="hrc-ico hrc-route-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>
+          <span class="hrc-chip-label">Local &middot; Demo model</span>
+          <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+        </button>
+      </div>
+      <div class="hrc-right">
+        <div class="hrc-mode" role="group" aria-label="Mode">
+          <button type="button" class="hrc-seg" aria-pressed="true" data-placeholder="Ask anything, or search across every project&hellip;">Ask</button>
+          <button type="button" class="hrc-seg" aria-pressed="false" data-placeholder="Describe a task. The assistant plans it, uses tools, and asks before it changes anything&hellip;">Agent</button>
+          <button type="button" class="hrc-seg" aria-pressed="false" data-placeholder="What should I look into? I will read sources and write a cited brief&hellip;">Research</button>
+        </div>
+        <button type="button" class="hrc-send" aria-label="Send">
+          <svg class="hrc-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 18.5V6"/><path d="m6.5 11.5 5.5-5.5 5.5 5.5"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="hrc-hint" role="group" aria-label="Keyboard hints">
+    <span><kbd class="hrc-key">&crarr;</kbd>send</span>
+    <span><kbd class="hrc-key">&#8679;&crarr;</kbd>new line</span>
+    <span><kbd class="hrc-key">/</kbd>commands</span>
+  </div>
+  <!-- Demo only: the chip states side by side, plus a long scope label that is cut with an ellipsis. Delete this strip when you copy the pattern. -->
+  <div class="hrc-states" role="group" aria-label="Chip states">
+    <span class="hrc-states-label">Chip states</span>
+    <button type="button" class="hrc-chip" data-route="local" aria-label="Model route: Local, Demo model. Change model" title="Local endpoint, Demo model">
+      <svg class="hrc-ico hrc-route-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>
+      <span class="hrc-chip-label">Local &middot; Demo model</span>
+      <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+    </button>
+    <button type="button" class="hrc-chip" data-route="cloud" aria-label="Model route: Cloud, Demo model. The message leaves this machine. Change model" title="Cloud endpoint, the message leaves this machine. Demo model">
+      <svg class="hrc-ico hrc-route-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18.5a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17.6 9.8a4.35 4.35 0 0 1-.4 8.7z"/></svg>
+      <span class="hrc-chip-label">Cloud &middot; Demo model</span>
+      <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+    </button>
+    <button type="button" class="hrc-chip" data-route="unset" aria-label="Choose a model" title="Choose the model for the next answer">
+      <span class="hrc-chip-label">Choose a model</span>
+      <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+    </button>
+    <button type="button" class="hrc-chip" data-scope="folder" aria-label="Scope: Demo workspace folder with an extremely long name that cannot fit. Choose workspace" title="Scope: Demo workspace folder with an extremely long name that cannot fit">
+      <svg class="hrc-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+      <span class="hrc-chip-label">Demo workspace folder with an extremely long name that cannot fit</span>
+      <svg class="hrc-ico hrc-caret" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg>
+    </button>
+  </div>
+</div>
+<script>
+(function(){
+  // The mode switch is the only scripted part. No timers, observers or document
+  // listeners, so there is nothing to tear down when the card leaves the DOM.
+  // Colour comes from CSS variables only, so the theme toggle recolours it live.
+  var script = document.currentScript;
+  var wrap = script && script.previousElementSibling;
+  if (!wrap || !wrap.classList.contains('hrc-wrap')){
+    wrap = script && script.parentElement ? script.parentElement.querySelector('.hrc-wrap') : null;
+  }
+  if (!wrap || wrap.getAttribute('data-hrc-ready')) return;
+  var input = wrap.querySelector('.hrc-input');
+  var segs = wrap.querySelectorAll('.hrc-seg');
+  if (!input || !segs.length) return;
+  wrap.setAttribute('data-hrc-ready', '1');
+
+  Array.prototype.forEach.call(segs, function(seg){
+    seg.addEventListener('click', function(){
+      if (!wrap.isConnected) return;
+      Array.prototype.forEach.call(segs, function(other){
+        other.setAttribute('aria-pressed', other === seg ? 'true' : 'false');
+      });
+      // Only the hint changes. Whatever the person has typed stays in the box.
+      input.setAttribute('placeholder', seg.getAttribute('data-placeholder') || '');
+    });
+  });
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Today Tile" data-category="Components" data-source="Odysseus Home v1.0.50, static/home.css and static/js/home.js" data-note="Small status tile for a Today row. A header with an icon, a small label and a mono value on the right, then a title line and a sub line that each cut with an ellipsis when they run long (the full text sits in the title attribute). An optional 4px progress bar goes last, with a role, a label and a text value, and the same figure also shows as words in the header, so the bar is never the only carrier. Four demo tiles: an event with a time, a count, a progress tile and the designed empty state (dashed edge, muted title, one plain sentence saying why it is empty). Use a button when the tile opens something and a div when it only reports. The grid auto-fits columns and drops to one on a phone, hover and focus use house tokens, and nothing relies on colour alone.">
+<style>
+/* Today Tile, class prefix tdt-. Tokens only. Tiles are already taller than 44px, so no touch override is needed. */
+.tdt-grid{width:100%;max-width:440px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;text-align:left}
+.tdt-ico{display:block;flex:none}
+.tdt-tile{box-sizing:border-box;display:flex;flex-direction:column;gap:6px;width:100%;min-width:0;margin:0;padding:14px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background var(--dur) ease-out,border-color var(--dur) ease-out}
+/* Hover lifts to bg3, not bg4, so the small text3 labels keep 4.5:1 on the hover fill in both themes. */
+.tdt-tile:hover{background:var(--bg3);border-color:var(--border2);box-shadow:var(--shadow-1)}
+.tdt-tile:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.tdt-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;font-size:12px;color:var(--text3)}
+.tdt-label{display:flex;align-items:center;gap:7px;min-width:0}
+.tdt-label-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tdt-meta{flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums;color:var(--text2)}
+.tdt-main{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;line-height:1.35;color:var(--text)}
+.tdt-sub{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:1.45;color:var(--text2)}
+.tdt-bar{display:block;height:4px;margin-top:4px;border-radius:var(--radius-lg);background:var(--border2);overflow:hidden}
+.tdt-bar-fill{display:block;height:100%;border-radius:var(--radius-lg);background:var(--accent)}
+/* Designed empty state. Dashed edge and a muted title, and the words say why it is empty. */
+.tdt-tile[data-state="empty"]{border-style:dashed;border-color:var(--border2)}
+.tdt-tile[data-state="empty"] .tdt-main{font-weight:500;color:var(--text2)}
+</style>
+<div class="tdt-grid">
+  <button type="button" class="tdt-tile" data-kind="event" data-state="ready">
+    <span class="tdt-head">
+      <span class="tdt-label">
+        <svg class="tdt-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></svg>
+        <span class="tdt-label-text">Next up</span>
+      </span>
+      <span class="tdt-meta">16:00</span>
+    </span>
+    <span class="tdt-main" title="Sample design review with the whole demo team and two long-named guests">Sample design review with the whole demo team and two long-named guests</span>
+    <span class="tdt-sub" title="45 min &middot; demo video call in an unusually long room name">45 min &middot; demo video call in an unusually long room name</span>
+  </button>
+  <button type="button" class="tdt-tile" data-kind="count" data-state="ready">
+    <span class="tdt-head">
+      <span class="tdt-label">
+        <svg class="tdt-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="m4.5 9 7.5 5 7.5-5"/></svg>
+        <span class="tdt-label-text">Inbox</span>
+      </span>
+      <span class="tdt-meta">2m ago</span>
+    </span>
+    <span class="tdt-main" title="3 need a reply">3 need a reply</span>
+    <span class="tdt-sub" title="Drafts ready for 2 of them">Drafts ready for 2 of them</span>
+  </button>
+  <button type="button" class="tdt-tile" data-kind="progress" data-state="ready">
+    <span class="tdt-head">
+      <span class="tdt-label">
+        <svg class="tdt-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.5 3.5 3.5 10.8l6.2 2.5 2.5 6.2z"/><path d="m9.7 13.3 4-4"/></svg>
+        <span class="tdt-label-text">Dispatched</span>
+      </span>
+      <span class="tdt-meta">2 / 5</span>
+    </span>
+    <span class="tdt-main" title="Write sample retry tests">Write sample retry tests</span>
+    <span class="tdt-sub" title="Demo agent &middot; Round 2 of 5">Demo agent &middot; Round 2 of 5</span>
+    <span class="tdt-bar" role="progressbar" aria-label="Dispatch progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" aria-valuetext="2 of 5 steps done"><span class="tdt-bar-fill" style="width:40%"></span></span>
+  </button>
+  <button type="button" class="tdt-tile" data-kind="event" data-state="empty">
+    <span class="tdt-head">
+      <span class="tdt-label">
+        <svg class="tdt-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M8 3v4M16 3v4M3.5 10.5h17"/></svg>
+        <span class="tdt-label-text">Next up</span>
+      </span>
+    </span>
+    <span class="tdt-main" title="Nothing scheduled">Nothing scheduled</span>
+    <span class="tdt-sub" title="No timed events in the next 7 days">No timed events in the next 7 days</span>
+  </button>
+</div>
+</template>
+
+<template class="pattern" data-title="Session Card" data-category="Components" data-source="Odysseus Home v1.0.50, static/home.css and static/js/home.js" data-note="Clickable summary card for a recent session or chat, built as a real button so Enter and Space work with no script. A title and a one-line preview each cut with an ellipsis (the full text sits in the title attribute), then a meta row. The Needs approval pill is words on a tinted amber fill with a matching edge, so it never relies on colour alone, and it only appears when something is waiting. Meta reads mode then age, for example Agent, 2m ago. The demo shows a card with the pill and a long title and preview, a card without it, and a loading skeleton card that keeps the real card's height and stops pulsing under reduced motion. Pair a list of these with the Designed Empty State pattern when there are no sessions.">
+<style>
+/* Session Card, class prefix ssn-. Tokens only. Cards are already taller than 44px, so no touch override is needed. */
+.ssn-list{width:100%;max-width:640px;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));gap:12px;text-align:left}
+.ssn-card{box-sizing:border-box;display:flex;flex-direction:column;gap:8px;width:100%;min-width:0;margin:0;padding:14px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background var(--dur) ease-out,border-color var(--dur) ease-out}
+/* Hover lifts to bg3, not bg4, so the text3 meta line keeps 4.5:1 on the hover fill in both themes. */
+.ssn-card:hover{background:var(--bg3);border-color:var(--border2);box-shadow:var(--shadow-1)}
+.ssn-card:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.ssn-title{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:600;line-height:1.35}
+.ssn-preview{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;line-height:1.45;color:var(--text2)}
+.ssn-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;min-width:0;min-height:24px;margin-top:2px}
+.ssn-pill{padding:2px 8px;border:1px solid color-mix(in srgb,var(--amber) 45%,transparent);border-radius:var(--radius-lg);background:var(--amber-soft);color:var(--amber);font-size:12px;font-weight:600;white-space:nowrap}
+.ssn-meta{min-width:0;font-size:12px;color:var(--text3);overflow-wrap:anywhere}
+/* Loading skeleton. Same box as a real card so nothing jumps when the data lands. */
+.ssn-card-skel{position:relative;gap:10px;min-height:110px;cursor:default;pointer-events:none}
+.ssn-skel{display:block;height:12px;border-radius:var(--radius);background:var(--border2);animation:ssn-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.ssn-skel-title{width:55%;height:14px}
+.ssn-skel-line{width:90%}
+.ssn-skel-short{width:40%}
+.ssn-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@keyframes ssn-pulse{0%,100%{opacity:.55}50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.ssn-skel{animation:none}}
+</style>
+<div class="ssn-list">
+  <button type="button" class="ssn-card">
+    <span class="ssn-title" title="Sample: tidy the demo dispatch queue so retries never stall after a restart">Sample: tidy the demo dispatch queue so retries never stall after a restart</span>
+    <span class="ssn-preview" title="Found the stall in the sample backoff helper. One demo change is ready for you to review before anything is written.">Found the stall in the sample backoff helper. One demo change is ready for you to review before anything is written.</span>
+    <span class="ssn-foot">
+      <span class="ssn-pill">Needs approval</span>
+      <span class="ssn-meta">Agent &middot; 2m ago</span>
+    </span>
+  </button>
+  <button type="button" class="ssn-card">
+    <span class="ssn-title" title="Sample: compare three demo quotes">Sample: compare three demo quotes</span>
+    <span class="ssn-preview" title="Summarised the three example quotes into one table with a recommendation.">Summarised the three example quotes into one table with a recommendation.</span>
+    <span class="ssn-foot">
+      <span class="ssn-meta">Ask &middot; Yesterday</span>
+    </span>
+  </button>
+  <div class="ssn-card ssn-card-skel" role="status" aria-busy="true">
+    <span class="ssn-skel ssn-skel-title" aria-hidden="true"></span>
+    <span class="ssn-skel ssn-skel-line" aria-hidden="true"></span>
+    <span class="ssn-skel ssn-skel-short" aria-hidden="true"></span>
+    <span class="ssn-sr">Loading recent sessions</span>
+  </div>
 </div>
 </template>
 
