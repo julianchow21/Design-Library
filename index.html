@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.13 (8 Oct)</span>
+  <span class="ver">v1.14 (10 Oct)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -8024,6 +8024,734 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
     <span class="ssn-sr">Loading recent sessions</span>
   </div>
 </div>
+</template>
+
+<!-- ============================================================================
+     FROM ODYSSEUS CONVERSATION, Components. Approval Card, Run Summary Card and
+     Diff Block, clean rebuilds on house tokens, synthetic demo copy only.
+     ========================================================================== -->
+
+<template class="pattern" data-title="Approval Card" data-category="Components" data-source="Odysseus conversation v1.0.51, static/conversation.css, approvalCard.js, runSummary.js, markdown.js" data-note="Write-approval card for an agent's proposed change. An accent-edged card with a pencil tile, a title that names the file (Apply 1 change to retry.py), a sub line with the workspace, the line counts and the promise that nothing is written until you approve, then Review diff, Apply and Reject. Review diff opens a small inline diff (aria-expanded and aria-controls). Apply never writes straight away. It opens an inline confirm that names the full workspace path and every file with what happens to it, and only the confirm's Apply moves on, Cancel and Escape put you back. The row under the main row carries words and an icon for every state, so colour is never the only signal: working (clock, buttons off), applied (check), conflict (alert, the file changed on disk since the proposal was made, nothing was written, only Reject is left), rejected (cross), denied (lock) and expired (clock). The accent edge means a decision is still open, so settled cards drop it and go quiet. That row is a polite live region and takes focus when an action changes it. Long names wrap instead of pushing the buttons out, the buttons wrap on narrow widths and reach 44px high under 600px wide. The state switch above the card and the fake apply timer are demo only. The real card decides nothing itself, the server rechecks identity, version and file hashes at Apply. Synthetic names and paths throughout.">
+<style>
+/* Approval Card, class prefix apv-. Tokens only. Icons are plain strokes at the Icon System tiers, 16 for the tile and 14 for the status line. */
+/* Gallery only: give this card the full row so the buttons sit beside the text. Delete this one rule when you copy the pattern. */
+.card:has(.apv-wrap){grid-column:1/-1}
+.apv-wrap{width:100%;max-width:640px;min-width:0;display:flex;flex-direction:column;gap:14px;text-align:left}
+.apv-ico{display:block;flex:none}
+/* Demo only: the state switch. Delete these rules and the strip when you copy the pattern. */
+.apv-switch{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.apv-switch-label{flex:none;margin-right:4px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.apv-switch-btn{box-sizing:border-box;height:28px;margin:0;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font:inherit;font-size:12px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.apv-switch-btn:hover{background:var(--bg4);color:var(--text)}
+.apv-switch-btn[aria-pressed="true"]{background:var(--bg4);box-shadow:inset 0 0 0 1px var(--text3);color:var(--text);font-weight:600}
+.apv-switch-btn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* The card. The accent edge and wash mean a decision is still open. */
+.apv-card{box-sizing:border-box;width:100%;min-width:0;padding:14px;border:1px solid color-mix(in srgb,var(--accent) 45%,var(--border));border-radius:var(--radius-lg);background:color-mix(in srgb,var(--accent) 6%,var(--bg2));color:var(--text);transition:background var(--dur) ease-out,border-color var(--dur) ease-out}
+.apv-main{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.apv-tile{display:grid;place-items:center;flex:none;width:32px;height:32px;border-radius:calc(var(--radius) - 2px);background:var(--accent-soft);color:var(--accent2);transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.apv-text{flex:1 1 200px;min-width:0}
+.apv-title{margin:0;font-size:14px;font-weight:600;line-height:1.35;color:var(--text);overflow-wrap:anywhere}
+.apv-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;font-weight:500}
+.apv-sub{margin:2px 0 0;font-size:12px;line-height:1.4;color:var(--text2);overflow-wrap:anywhere}
+.apv-actions{display:flex;flex-wrap:wrap;gap:8px;margin-left:auto}
+.apv-actions[hidden]{display:none}
+.apv-btn{box-sizing:border-box;height:34px;margin:0;padding:0 14px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--dur) ease-out,border-color var(--dur) ease-out,box-shadow var(--dur) ease-out,transform var(--dur) var(--spring)}
+.apv-btn[hidden]{display:none}
+.apv-btn:hover:not(:disabled){background:var(--bg4)}
+.apv-btn:active:not(:disabled){transform:scale(.97)}
+.apv-btn:disabled{opacity:.55;cursor:default}
+.apv-btn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* Apply is the only accent fill in the card. Reject is quiet, no edge until hover. Hover tints the fill with the text colour, lighter in dark and darker in light, so the label keeps 4.5:1 on the hover fill in both themes. */
+.apv-btn.apv-primary{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--grad-2));color:var(--onacc);font-weight:600}
+.apv-btn.apv-primary:hover:not(:disabled){box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--text) 10%,transparent)}
+.apv-btn.apv-reject{border-color:transparent;color:var(--text2)}
+.apv-btn.apv-reject:hover:not(:disabled){color:var(--text)}
+/* The status row sits in the page from the start, empty, so a screen reader hears the first change. */
+.apv-status{display:flex;align-items:flex-start;gap:8px;font-size:13px;line-height:1.45;color:var(--text)}
+.apv-status:not(:empty){margin-top:12px}
+.apv-status:focus-visible{outline:2px solid var(--accent2);outline-offset:2px;border-radius:calc(var(--radius) - 4px)}
+.apv-status-ico{display:inline-flex;flex:none;margin-top:1px;color:var(--text2)}
+.apv-status-text{min-width:0;overflow-wrap:anywhere}
+.apv-card[data-state="working"] .apv-status-ico{color:var(--accent2);animation:apv-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.apv-card[data-state="applied"] .apv-status-ico{color:var(--green)}
+.apv-card[data-state="conflict"] .apv-status-ico{color:var(--amber)}
+.apv-card[data-state="denied"] .apv-status-ico{color:var(--red)}
+/* A settled card has nothing left to ask, so the edge and wash go and the tile mutes. */
+.apv-card[data-state="applied"],.apv-card[data-state="rejected"],.apv-card[data-state="expired"],.apv-card[data-state="denied"]{border-color:var(--border);background:var(--bg2)}
+.apv-card[data-state="applied"] .apv-tile,.apv-card[data-state="rejected"] .apv-tile,.apv-card[data-state="expired"] .apv-tile,.apv-card[data-state="denied"] .apv-tile{background:var(--bg4);color:var(--text3)}
+/* The inline confirm. Full workspace path and every file, nothing shortened. */
+.apv-confirm{display:flex;flex-direction:column;gap:10px;margin-top:12px;padding:12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3)}
+.apv-confirm[hidden]{display:none}
+.apv-confirm-title{margin:0;font-size:13px;font-weight:600;color:var(--text)}
+.apv-confirm-title:focus-visible{outline:2px solid var(--accent2);outline-offset:2px;border-radius:calc(var(--radius) - 4px)}
+.apv-label{margin:0 0 4px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.apv-pre{margin:0;padding:8px 10px;border:1px solid var(--border);border-radius:calc(var(--radius) - 2px);background:var(--bg2);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.apv-note{margin:0;font-size:12px;line-height:1.45;color:var(--text2)}
+.apv-confirm-actions{display:flex;flex-wrap:wrap;gap:8px}
+/* The inline diff behind Review diff. A small copy of the Diff Block pattern, kept here so this card copies on its own. */
+.apv-detail{margin-top:12px}
+.apv-detail[hidden]{display:none}
+.apv-diff{border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2);overflow:hidden}
+.apv-diff-head{display:flex;align-items:center;gap:10px;min-height:32px;padding:0 12px;border-bottom:1px solid var(--border);background:var(--bg3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text2)}
+.apv-diff-path{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.apv-diff-stats{display:inline-flex;flex:none;gap:8px;font-weight:600}
+.apv-add{color:var(--green)}
+.apv-del{color:var(--red)}
+.apv-diff-body{max-height:240px;overflow:auto;padding:6px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;line-height:1.6;color:var(--text2)}
+.apv-diff-body:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+.apv-rows{width:max-content;min-width:100%}
+.apv-row{display:flex;background:var(--bg2)}
+.apv-gut{position:sticky;left:0;display:flex;flex:none;background:inherit}
+.apv-no{box-sizing:content-box;width:2ch;padding:0 8px 0 12px;text-align:right;color:var(--text3);-webkit-user-select:none;user-select:none}
+.apv-mark{width:2ch;text-align:center;-webkit-user-select:none;user-select:none}
+.apv-line{flex:1 0 auto;padding:0 12px 0 0;white-space:pre}
+.apv-row[data-kind="add"]{background:var(--green-soft);color:var(--text)}
+.apv-row[data-kind="del"]{background:var(--red-soft);color:var(--text)}
+.apv-row[data-kind="add"] .apv-no,.apv-row[data-kind="add"] .apv-mark{color:var(--green)}
+.apv-row[data-kind="del"] .apv-no,.apv-row[data-kind="del"] .apv-mark{color:var(--red)}
+.apv-row[data-kind="hunk"] .apv-line{color:var(--accent2)}
+@keyframes apv-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* Touch sizes. Phones and tablets get 44px targets. */
+@media (max-width:600px),(pointer:coarse){
+  .apv-btn,.apv-switch-btn{min-height:44px}
+}
+/* Phones. The buttons take their own row under the text and share it. */
+@media (max-width:600px){
+  .apv-card{padding:12px}
+  .apv-actions{width:100%}
+  .apv-actions .apv-btn,.apv-confirm-actions .apv-btn{flex:1 1 auto}
+}
+@media (prefers-reduced-motion:reduce){
+  .apv-card[data-state="working"] .apv-status-ico{animation:none}
+  .apv-card,.apv-tile,.apv-btn,.apv-switch-btn{transition:none}
+}
+</style>
+<div class="apv-wrap">
+  <!-- Demo only: the state switch. Delete this strip when you copy the pattern. -->
+  <div class="apv-switch" role="group" aria-label="Demo state">
+    <span class="apv-switch-label">State</span>
+    <button type="button" class="apv-switch-btn" data-apv-state="pending" aria-pressed="true">Pending</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="working" aria-pressed="false">Working</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="applied" aria-pressed="false">Applied</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="conflict" aria-pressed="false">Conflict</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="rejected" aria-pressed="false">Rejected</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="denied" aria-pressed="false">Denied</button>
+    <button type="button" class="apv-switch-btn" data-apv-state="expired" aria-pressed="false">Expired</button>
+  </div>
+  <section class="apv-card" data-state="pending" aria-label="Proposed file change">
+    <div class="apv-main">
+      <span class="apv-tile" aria-hidden="true">
+        <svg class="apv-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4 11-11a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg>
+      </span>
+      <div class="apv-text">
+        <h4 class="apv-title">Apply 1 change to <code class="apv-code" title="src/sample/retry.py">retry.py</code></h4>
+        <p class="apv-sub" title="/home/demo-user/projects/sample-workspace">sample-workspace &middot; +2 &minus;1 &middot; nothing is written until you approve</p>
+      </div>
+      <div class="apv-actions">
+        <button type="button" class="apv-btn apv-review" aria-expanded="false" aria-controls="apv-detail">Review diff</button>
+        <button type="button" class="apv-btn apv-primary apv-apply">Apply</button>
+        <button type="button" class="apv-btn apv-reject">Reject</button>
+      </div>
+    </div>
+    <div class="apv-status" role="status" tabindex="-1"></div>
+    <div class="apv-confirm" role="group" aria-label="Confirm applying the change" hidden>
+      <h5 class="apv-confirm-title" tabindex="-1">Apply 1 file change in this workspace?</h5>
+      <div>
+        <p class="apv-label">Workspace</p>
+        <pre class="apv-pre">/home/demo-user/projects/sample-workspace</pre>
+      </div>
+      <div>
+        <p class="apv-label">Files</p>
+        <pre class="apv-pre">edit    src/sample/retry.py</pre>
+      </div>
+      <p class="apv-note">This writes to disk now. It stops, and writes nothing, if the git tree has uncommitted work or any of these files changed since the proposal was made.</p>
+      <div class="apv-confirm-actions">
+        <button type="button" class="apv-btn apv-primary apv-confirm-apply">Apply</button>
+        <button type="button" class="apv-btn apv-confirm-cancel">Cancel</button>
+      </div>
+    </div>
+    <div class="apv-detail" id="apv-detail" hidden>
+      <div class="apv-diff">
+        <div class="apv-diff-head">
+          <span class="apv-diff-path" title="src/sample/retry.py">src/sample/retry.py</span>
+          <span class="apv-diff-stats" role="img" aria-label="2 lines added, 1 line removed"><span class="apv-add">+2</span><span class="apv-del">&minus;1</span></span>
+        </div>
+        <div class="apv-diff-body" role="region" tabindex="0" aria-label="Changed lines in src/sample/retry.py">
+          <div class="apv-rows">
+            <div class="apv-row" data-kind="hunk"><span class="apv-gut"><span class="apv-no" aria-hidden="true"></span><span class="apv-mark"></span></span><span class="apv-line">@@ -61,4 +61,5 @@</span></div>
+            <div class="apv-row" data-kind="ctx"><span class="apv-gut"><span class="apv-no" aria-hidden="true">61</span><span class="apv-mark"></span></span><span class="apv-line">def sample_backoff(job, response):</span></div>
+            <div class="apv-row" data-kind="ctx"><span class="apv-gut"><span class="apv-no" aria-hidden="true">62</span><span class="apv-mark"></span></span><span class="apv-line">    delay = retry_after(response) or jitter(job.attempt)</span></div>
+            <div class="apv-row" data-kind="del"><span class="apv-gut"><span class="apv-no" aria-hidden="true">63</span><span class="apv-mark">&minus;</span></span><span class="apv-line">    queue.push(job, delay=delay)</span></div>
+            <div class="apv-row" data-kind="add"><span class="apv-gut"><span class="apv-no" aria-hidden="true">63</span><span class="apv-mark">+</span></span><span class="apv-line">    job.in_flight = False</span></div>
+            <div class="apv-row" data-kind="add"><span class="apv-gut"><span class="apv-no" aria-hidden="true">64</span><span class="apv-mark">+</span></span><span class="apv-line">    queue.push(job, delay=delay)</span></div>
+            <div class="apv-row" data-kind="ctx"><span class="apv-gut"><span class="apv-no" aria-hidden="true">65</span><span class="apv-mark"></span></span><span class="apv-line">    log.info("retry scheduled", attempt=job.attempt)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+<script>
+(function(){
+  // Demo script. It drives the state switch, the Review diff toggle and the Apply confirm. Nothing here talks to a server.
+  // The one timer is a short timeout for the fake apply. It is cleared on every state change and checks isConnected before it touches the page.
+  // Colour comes from CSS variables only, so the theme toggle recolours the card live.
+  var script = document.currentScript;
+  var wrap = script && script.previousElementSibling;
+  if (!wrap || !wrap.classList.contains('apv-wrap')){
+    wrap = script && script.parentElement ? script.parentElement.querySelector('.apv-wrap') : null;
+  }
+  if (!wrap || wrap.getAttribute('data-apv-ready')) return;
+  var card = wrap.querySelector('.apv-card');
+  var actions = wrap.querySelector('.apv-actions');
+  var review = wrap.querySelector('.apv-review');
+  var apply = wrap.querySelector('.apv-apply');
+  var reject = wrap.querySelector('.apv-reject');
+  var status = wrap.querySelector('.apv-status');
+  var confirmBox = wrap.querySelector('.apv-confirm');
+  var confirmTitle = wrap.querySelector('.apv-confirm-title');
+  var confirmApply = wrap.querySelector('.apv-confirm-apply');
+  var confirmCancel = wrap.querySelector('.apv-confirm-cancel');
+  var detail = wrap.querySelector('.apv-detail');
+  var switches = wrap.querySelectorAll('.apv-switch-btn');
+  if (!card || !actions || !review || !apply || !reject || !status || !confirmBox || !confirmTitle || !confirmApply || !confirmCancel || !detail || !switches.length) return;
+  wrap.setAttribute('data-apv-ready', '1');
+
+  // A fresh id per instance, so two live copies never share an aria-controls target.
+  var uid = Math.random().toString(36).slice(2, 8);
+  detail.id = 'apv-detail-' + uid;
+  review.setAttribute('aria-controls', detail.id);
+
+  var ATTRS = 'class="apv-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var ICONS = {
+    clock: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+    check: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.5 2.5 4.6-5.1"/></svg>',
+    alert: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/></svg>',
+    x: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></svg>',
+    lock: '<svg ' + ATTRS + '><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg>'
+  };
+
+  // One row per state: the icon and words of the status line, which buttons are left, and whether the card is busy.
+  var STATES = {
+    pending:  { icon: '', text: '', buttons: ['review', 'apply', 'reject'], busy: false },
+    working:  { icon: 'clock', text: 'Approving, then applying. Nothing is written unless both steps pass.', buttons: ['review', 'apply', 'reject'], busy: true },
+    applied:  { icon: 'check', text: 'Applied. Clean recovery base demo1a2b3c.', buttons: [], busy: false },
+    conflict: { icon: 'alert', text: 'retry.py changed on disk since this proposal was created, nothing was written.', buttons: ['reject'], busy: false },
+    rejected: { icon: 'x', text: 'Rejected. Nothing was written.', buttons: [], busy: false },
+    denied:   { icon: 'lock', text: 'Only an administrator can review and apply this. Nothing was changed.', buttons: [], busy: false },
+    expired:  { icon: 'clock', text: 'This proposal is no longer available. It expired, was already actioned, or the server restarted. Nothing was changed.', buttons: [], busy: false }
+  };
+  var state = 'pending';
+  var timer = 0;
+
+  function setBusy(on){
+    review.disabled = on;
+    apply.disabled = on;
+    reject.disabled = on;
+  }
+  function setReview(open){
+    review.setAttribute('aria-expanded', open ? 'true' : 'false');
+    review.textContent = open ? 'Hide diff' : 'Review diff';
+    detail.hidden = !open;
+  }
+  function closeConfirm(returnFocus){
+    if (confirmBox.hidden) return;
+    confirmBox.hidden = true;
+    setBusy(STATES[state].busy);
+    if (returnFocus) apply.focus();
+  }
+  function setStatus(def){
+    status.textContent = '';
+    if (!def.text) return;
+    var ico = document.createElement('span');
+    ico.className = 'apv-status-ico';
+    ico.setAttribute('aria-hidden', 'true');
+    ico.innerHTML = ICONS[def.icon];
+    var text = document.createElement('span');
+    text.className = 'apv-status-text';
+    text.textContent = def.text;
+    status.appendChild(ico);
+    status.appendChild(text);
+  }
+  function setState(next, focusStatus){
+    var def = STATES[next];
+    if (!def) return;
+    clearTimeout(timer);
+    timer = 0;
+    closeConfirm(false);
+    state = next;
+    card.setAttribute('data-state', next);
+    card.setAttribute('aria-busy', def.busy ? 'true' : 'false');
+    review.hidden = def.buttons.indexOf('review') < 0;
+    apply.hidden = def.buttons.indexOf('apply') < 0;
+    reject.hidden = def.buttons.indexOf('reject') < 0;
+    actions.hidden = def.buttons.length === 0;
+    apply.textContent = next === 'working' ? 'Applying…' : 'Apply';
+    setBusy(def.busy);
+    if (review.hidden) setReview(false);
+    setStatus(def);
+    Array.prototype.forEach.call(switches, function(btn){
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-apv-state') === next ? 'true' : 'false');
+    });
+    if (focusStatus && def.text) status.focus();
+  }
+
+  review.addEventListener('click', function(){ setReview(detail.hidden); });
+  apply.addEventListener('click', function(){
+    if (state !== 'pending') return;
+    confirmBox.hidden = false;
+    setBusy(true);
+    confirmTitle.focus();
+  });
+  confirmCancel.addEventListener('click', function(){ closeConfirm(true); });
+  confirmApply.addEventListener('click', function(){
+    setState('working', true);
+    // Fake apply. A real card posts to the server here and shows whatever answer comes back.
+    timer = setTimeout(function(){
+      timer = 0;
+      if (!wrap.isConnected || state !== 'working') return;
+      setState('applied', true);
+    }, 1400);
+  });
+  reject.addEventListener('click', function(){ setState('rejected', true); });
+  wrap.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !confirmBox.hidden){
+      e.preventDefault();
+      closeConfirm(true);
+    }
+  });
+  Array.prototype.forEach.call(switches, function(btn){
+    btn.addEventListener('click', function(){ setState(btn.getAttribute('data-apv-state'), false); });
+  });
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Run Summary Card" data-category="Components" data-source="Odysseus conversation v1.0.51, static/conversation.css, approvalCard.js, runSummary.js, markdown.js" data-note="Collapsible summary of an agent's turn, shown above its answer. The header is one button: a status icon, the title (Worked for 42s), the meta in a quieter colour (4 steps, read 2 files) and a chevron. It carries aria-expanded and aria-controls for the step list, and the chevron turns in the house motion time and stays still under reduced motion. Title and meta are one line of text, so when the row is tight one ellipsis cuts the meta first and the title only after that. The meta names at most the two most telling kinds of step, edits first, then commands, reads and searches. A step is a row with an icon, the action with its target in inline code (cut with an ellipsis, the full text in the title attribute) and a mono value on the right. When the stack is narrow (a container query at 440px, so a phone or a side panel) the value drops under the action and the action gets the whole row. Four demo cards: done and collapsed, done and expanded (a long path, an edit with its line counts), running (the clock pulses, the open step says running, the seconds are frozen at 12 here and a real card ticks once a second) and stopped by an error (alert icon, the failed step says failed). A check, a clock and an alert differ in shape and the title says the state in words, so colour is never the only signal. A finished run collapses once its answer lands, a stopped or failed run stays open. Under 600px wide the header reaches 44px high. Synthetic copy throughout.">
+<style>
+/* Run Summary Card, class prefix rsm-. Tokens only. Icons are plain strokes at the Icon System tiers, 16 for the status and 14 for the steps and the chevron. */
+/* Gallery only: give this card the full row so the header shows at a real width. Delete this one rule when you copy the pattern. */
+.card:has(.rsm-stack){grid-column:1/-1}
+.rsm-stack{width:100%;max-width:560px;min-width:0;display:flex;flex-direction:column;gap:16px;text-align:left;container:rsm / inline-size}
+.rsm-ico{display:block;flex:none}
+/* Demo only: the small label over each card. Delete these two rules and the labels when you copy the pattern. */
+.rsm-group{display:flex;flex-direction:column;gap:6px;min-width:0}
+.rsm-cap{margin:0;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.rsm-card{box-sizing:border-box;width:100%;min-width:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);overflow:hidden}
+/* The header fills the card and the card clips what is drawn outside it, so the focus ring is drawn inside. */
+.rsm-head{display:flex;align-items:center;gap:10px;box-sizing:border-box;width:100%;min-height:40px;margin:0;padding:0 12px;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;transition:background var(--dur) ease-out}
+.rsm-head:hover{background:var(--bg3)}
+.rsm-head:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+.rsm-status{display:inline-flex;flex:none;color:var(--text3)}
+.rsm-card[data-state="done"] .rsm-status{color:var(--green)}
+.rsm-card[data-state="running"] .rsm-status{color:var(--accent2);animation:rsm-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.rsm-card[data-state="failed"] .rsm-status,.rsm-card[data-state="stopped"] .rsm-status{color:var(--red)}
+/* Title and meta are one line of text, so one ellipsis cuts from the right and the meta goes first. Two flex items would each be squeezed by a fraction of a pixel and cut the title early. */
+.rsm-line{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rsm-title{font-weight:600}
+/* The dot is generated in front of the meta. The second content line is alt text, empty, so a screen reader skips it. */
+.rsm-meta{color:var(--text2)}
+.rsm-meta::before{content:"\00b7";content:"\00b7" / "";margin:0 8px 0 4px;color:var(--text3)}
+.rsm-chev{display:inline-flex;flex:none;color:var(--text2);transition:transform var(--dur) ease-out}
+.rsm-head[aria-expanded="true"] .rsm-chev{transform:rotate(180deg)}
+.rsm-body{display:flex;flex-direction:column;gap:8px;margin:0;padding:8px 12px 12px 38px;list-style:none;border-top:1px solid var(--border)}
+.rsm-body[hidden]{display:none}
+.rsm-step{display:flex;align-items:center;gap:10px;min-width:0;min-height:24px;font-size:13px;line-height:1.4;color:var(--text2)}
+.rsm-step-ico{display:inline-flex;flex:none;color:var(--text3)}
+.rsm-action{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rsm-action code{padding:1px 5px;border-radius:calc(var(--radius) - 5px);background:var(--bg4);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em}
+.rsm-val{flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-variant-numeric:tabular-nums;color:var(--text3)}
+.rsm-step[data-run="true"] .rsm-step-ico{color:var(--accent2);animation:rsm-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.rsm-step[data-run="true"] .rsm-val{color:var(--accent2)}
+.rsm-step[data-ok="false"] .rsm-step-ico,.rsm-step[data-ok="false"] .rsm-val{color:var(--red)}
+@keyframes rsm-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* Narrow stacks, phones included. The value drops under the action so the action gets the whole row. */
+@container rsm (max-width:440px){
+  .rsm-step{flex-wrap:wrap;row-gap:0}
+  .rsm-action{flex:1 1 calc(100% - 26px)}
+  .rsm-val{max-width:calc(100% - 24px);margin-left:24px}
+}
+/* Touch sizes. Phones and tablets get a 44px header. */
+@media (max-width:600px),(pointer:coarse){
+  .rsm-head{min-height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+  .rsm-card[data-state="running"] .rsm-status,.rsm-step[data-run="true"] .rsm-step-ico{animation:none}
+  .rsm-chev,.rsm-head{transition:none}
+}
+</style>
+<div class="rsm-stack">
+  <div class="rsm-group">
+    <p class="rsm-cap">Done, collapsed</p>
+    <div class="rsm-card" data-state="done" data-expanded="false">
+      <button type="button" class="rsm-head" aria-expanded="false" aria-controls="rsm-body-1" title="Show the steps">
+        <span class="rsm-status" aria-hidden="true"><svg class="rsm-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.5 2.5 4.6-5.1"/></svg></span>
+        <span class="rsm-line"><span class="rsm-title">Worked for 42s</span> <span class="rsm-meta">4 steps &middot; read 2 files</span></span>
+        <span class="rsm-chev" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <ol class="rsm-body" id="rsm-body-1" role="list" hidden>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+          <span class="rsm-action" title="Listed src/dispatch/">Listed <code>src/dispatch/</code></span>
+          <span class="rsm-val">9 entries</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Read src/dispatch/retry.py">Read <code>src/dispatch/retry.py</code></span>
+          <span class="rsm-val">lines 40-88</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Read src/dispatch/queue.py">Read <code>src/dispatch/queue.py</code></span>
+          <span class="rsm-val">lines 102-140</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3z"/></svg></span>
+          <span class="rsm-action" title="Fetched docs.example.test">Fetched <code>docs.example.test</code></span>
+          <span class="rsm-val">4.2k chars</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+  <div class="rsm-group">
+    <p class="rsm-cap">Done, expanded</p>
+    <div class="rsm-card" data-state="done" data-expanded="true">
+      <button type="button" class="rsm-head" aria-expanded="true" aria-controls="rsm-body-2" title="Hide the steps">
+        <span class="rsm-status" aria-hidden="true"><svg class="rsm-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.5 2.5 4.6-5.1"/></svg></span>
+        <span class="rsm-line"><span class="rsm-title">Worked for 1m 18s</span> <span class="rsm-meta">4 steps &middot; edited 1 file &middot; read 2 files</span></span>
+        <span class="rsm-chev" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <ol class="rsm-body" id="rsm-body-2" role="list">
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg></span>
+          <span class="rsm-action" title="Searched 429 and retry">Searched <code>429</code> and <code>retry</code></span>
+          <span class="rsm-val">6 matches</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Read src/dispatch/retry.py">Read <code>src/dispatch/retry.py</code></span>
+          <span class="rsm-val">lines 40-88</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Read src/dispatch/queue.py">Read <code>src/dispatch/queue.py</code></span>
+          <span class="rsm-val">lines 102-140</span>
+        </li>
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20l1-4 11-11a2.1 2.1 0 0 1 3 3L8 19z"/><path d="M14 7l3 3"/></svg></span>
+          <span class="rsm-action" title="Edited src/dispatch/providers/an-unusually-long-sample-directory-name/retry_after_backoff_handler.py">Edited <code>src/dispatch/providers/an-unusually-long-sample-directory-name/retry_after_backoff_handler.py</code></span>
+          <span class="rsm-val">+2 &minus;1</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+  <div class="rsm-group">
+    <p class="rsm-cap">Running</p>
+    <div class="rsm-card" data-state="running" data-expanded="true">
+      <button type="button" class="rsm-head" aria-expanded="true" aria-controls="rsm-body-3" title="Hide the steps">
+        <span class="rsm-status" aria-hidden="true"><svg class="rsm-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg></span>
+        <span class="rsm-line"><span class="rsm-title">Working</span> <span class="rsm-meta">12s &middot; 2 steps</span></span>
+        <span class="rsm-chev" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <ol class="rsm-body" id="rsm-body-3" role="list">
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4-4"/></svg></span>
+          <span class="rsm-action" title="Searched 429 and retry">Searched <code>429</code> and <code>retry</code></span>
+          <span class="rsm-val">6 matches</span>
+        </li>
+        <li class="rsm-step" data-run="true">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Reading src/dispatch/queue.py">Reading <code>src/dispatch/queue.py</code></span>
+          <span class="rsm-val">running</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+  <div class="rsm-group">
+    <p class="rsm-cap">Stopped by an error</p>
+    <div class="rsm-card" data-state="failed" data-expanded="true">
+      <button type="button" class="rsm-head" aria-expanded="true" aria-controls="rsm-body-4" title="Hide the steps">
+        <span class="rsm-status" aria-hidden="true"><svg class="rsm-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/></svg></span>
+        <span class="rsm-line"><span class="rsm-title">Stopped by an error after 9s</span> <span class="rsm-meta">2 steps &middot; ran 1 command &middot; read 1 file</span></span>
+        <span class="rsm-chev" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></span>
+      </button>
+      <ol class="rsm-body" id="rsm-body-4" role="list">
+        <li class="rsm-step">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8.5z"/><path d="M14 3.5v5h5"/></svg></span>
+          <span class="rsm-action" title="Read src/dispatch/retry.py">Read <code>src/dispatch/retry.py</code></span>
+          <span class="rsm-val">lines 40-88</span>
+        </li>
+        <li class="rsm-step" data-ok="false">
+          <span class="rsm-step-ico" aria-hidden="true"><svg class="rsm-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/></svg></span>
+          <span class="rsm-action" title="Ran python -m pytest tests/test_retry.py -q">Ran <code>python -m pytest tests/test_retry.py -q</code></span>
+          <span class="rsm-val">failed</span>
+        </li>
+      </ol>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  // The expand and collapse toggle is the only scripted part. No timers, observers or document listeners,
+  // so there is nothing to tear down when the cards leave the DOM.
+  // Colour comes from CSS variables only, so the theme toggle recolours the cards live.
+  var script = document.currentScript;
+  var stack = script && script.previousElementSibling;
+  if (!stack || !stack.classList.contains('rsm-stack')){
+    stack = script && script.parentElement ? script.parentElement.querySelector('.rsm-stack') : null;
+  }
+  if (!stack || stack.getAttribute('data-rsm-ready')) return;
+  stack.setAttribute('data-rsm-ready', '1');
+
+  // A fresh id per instance, so two live copies never share an aria-controls target.
+  var uid = Math.random().toString(36).slice(2, 8);
+  Array.prototype.forEach.call(stack.querySelectorAll('.rsm-card'), function(card, index){
+    var head = card.querySelector('.rsm-head');
+    var body = card.querySelector('.rsm-body');
+    if (!head || !body) return;
+    body.id = 'rsm-body-' + uid + '-' + index;
+    head.setAttribute('aria-controls', body.id);
+    head.addEventListener('click', function(){
+      var open = head.getAttribute('aria-expanded') !== 'true';
+      head.setAttribute('aria-expanded', open ? 'true' : 'false');
+      head.setAttribute('title', open ? 'Hide the steps' : 'Show the steps');
+      card.setAttribute('data-expanded', open ? 'true' : 'false');
+      body.hidden = !open;
+    });
+  });
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Diff Block" data-category="Components" data-source="Odysseus conversation v1.0.51, static/conversation.css, approvalCard.js, runSummary.js, markdown.js" data-note="Code block with a 36px mono header. The path sits on the left and is cut with an ellipsis when long (the full path in the title attribute), then the added and removed counts, then a Copy button with a text label, never an icon alone. The diff body has a line number gutter and a marker column. Added and removed rows are tinted with the success and error soft tokens, and the marker (a plus or a minus sign) is real text, so a row reads as added or removed with no colour at all. The gutter stays pinned while a long line scrolls sideways, so the markers never scroll away. Long lines scroll inside the block, which is a keyboard focusable region, and the card never grows wider than its column. Line numbers are the new file's for added and context rows and the old file's for removed rows. Copy writes a plain unified diff with no gutter to the clipboard where the browser allows it, shows Copied for a moment and says so to screen readers. If the browser refuses, the label says Copy failed and the text is selected so the copy shortcut still works. Four demo blocks: a short diff, a long path with a long line and four digit line numbers, a plain fenced code variant (language label and Copy, no gutter) and an empty diff (counts at zero, one plain sentence, Copy off). There is no syntax colouring, wrap your own around the code text if you need it. Under 600px wide the Copy button reaches 44px high. Synthetic code throughout.">
+<style>
+/* Diff Block, class prefix dfb-. Tokens only. Icons are plain strokes at the Icon System tiers, 14 for the Copy button. */
+/* Gallery only: give this card the full row so long lines have room to show. Delete this one rule when you copy the pattern. */
+.card:has(.dfb-stack){grid-column:1/-1}
+.dfb-stack{width:100%;max-width:720px;min-width:0;display:flex;flex-direction:column;gap:18px;text-align:left}
+.dfb-ico{display:block;flex:none}
+/* Demo only: the small label over each block. Delete these two rules and the labels when you copy the pattern. */
+.dfb-group{display:flex;flex-direction:column;gap:6px;min-width:0}
+.dfb-cap{margin:0;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.dfb-block{position:relative;box-sizing:border-box;width:100%;min-width:0;margin:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);overflow:hidden}
+.dfb-head{display:flex;align-items:center;gap:10px;box-sizing:border-box;min-height:36px;padding:0 8px 0 14px;border-bottom:1px solid var(--border);background:var(--bg3);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.4;color:var(--text2)}
+.dfb-path{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dfb-stats{display:inline-flex;flex:none;gap:8px;font-weight:600}
+.dfb-add{color:var(--green)}
+.dfb-del{color:var(--red)}
+.dfb-stats-zero .dfb-add,.dfb-stats-zero .dfb-del{color:var(--text3)}
+/* The ring is drawn inside the header buttons, the block clips anything outside it. */
+.dfb-copy{display:inline-flex;align-items:center;gap:6px;flex:none;box-sizing:border-box;height:26px;margin:0;padding:0 8px;border:0;border-radius:calc(var(--radius) - 4px);background:transparent;color:var(--text2);font-family:var(--font);font-size:12px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.dfb-copy:hover:not(:disabled){background:var(--bg4);color:var(--text)}
+.dfb-copy:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+.dfb-copy:disabled{opacity:.55;cursor:default}
+.dfb-copy .dfb-ico-done{display:none}
+.dfb-copy[data-copied="true"] .dfb-ico-copy{display:none}
+.dfb-copy[data-copied="true"] .dfb-ico-done{display:block}
+.dfb-copy[data-copied="true"],.dfb-copy[data-copied="true"]:hover:not(:disabled){color:var(--green)}
+.dfb-copy[data-copied="error"],.dfb-copy[data-copied="error"]:hover:not(:disabled){color:var(--red)}
+/* The body scrolls both ways and takes keyboard focus, so a keyboard user can reach a long line. */
+.dfb-body{max-height:320px;overflow:auto;padding:8px 0;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;color:var(--text2)}
+.dfb-body:focus-visible,.dfb-plain:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+/* The rows sit in one wrapper as wide as the longest line, so every row and its tint runs the full scroll width. The gutter is sticky and paints the row's own fill, so text scrolls under it. */
+.dfb-rows{width:max-content;min-width:100%}
+.dfb-row{display:flex;background:var(--bg2)}
+.dfb-gut{position:sticky;left:0;display:flex;flex:none;background:inherit}
+.dfb-no{box-sizing:content-box;width:calc(var(--dfb-digits,3) * 1ch);padding:0 8px 0 14px;text-align:right;color:var(--text3);-webkit-user-select:none;user-select:none}
+.dfb-mark{width:2ch;text-align:center;-webkit-user-select:none;user-select:none}
+.dfb-text{flex:1 0 auto;padding:0 14px 0 0;white-space:pre}
+.dfb-row[data-kind="add"]{background:var(--green-soft);color:var(--text)}
+.dfb-row[data-kind="del"]{background:var(--red-soft);color:var(--text)}
+.dfb-row[data-kind="add"] .dfb-no,.dfb-row[data-kind="add"] .dfb-mark{color:var(--green)}
+.dfb-row[data-kind="del"] .dfb-no,.dfb-row[data-kind="del"] .dfb-mark{color:var(--red)}
+.dfb-row[data-kind="hunk"] .dfb-text{color:var(--accent2)}
+/* Plain fenced code. No gutter, one text colour. */
+.dfb-plain{max-height:320px;margin:0;padding:12px 14px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;color:var(--text);tab-size:4}
+.dfb-plain code{font:inherit}
+/* Designed empty state. One plain sentence that says why there is nothing to show. */
+.dfb-empty{margin:0;padding:14px;font-size:13px;color:var(--text2)}
+.dfb-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dfb-ghost{position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;pointer-events:none}
+/* Touch sizes. Phones and tablets get a 44px Copy button, the header grows to fit it. */
+@media (max-width:600px),(pointer:coarse){
+  .dfb-copy{min-height:44px;padding:0 12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .dfb-copy{transition:none}
+}
+</style>
+<div class="dfb-stack">
+  <div class="dfb-group">
+    <p class="dfb-cap">Diff</p>
+    <figure class="dfb-block" aria-label="Diff of src/sample/retry.py">
+      <figcaption class="dfb-head">
+        <span class="dfb-path" title="src/sample/retry.py">src/sample/retry.py</span>
+        <span class="dfb-stats" role="img" aria-label="2 lines added, 1 line removed"><span class="dfb-add">+2</span><span class="dfb-del">&minus;1</span></span>
+        <button type="button" class="dfb-copy" aria-label="Copy diff">
+          <svg class="dfb-ico dfb-ico-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>
+          <svg class="dfb-ico dfb-ico-done" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+          <span class="dfb-copy-label">Copy</span>
+        </button>
+      </figcaption>
+      <div class="dfb-body" role="region" tabindex="0" aria-label="Changed lines in src/sample/retry.py" style="--dfb-digits:2">
+        <div class="dfb-rows">
+          <div class="dfb-row" data-kind="hunk"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true"></span><span class="dfb-mark"></span></span><span class="dfb-text">@@ -61,4 +61,5 @@</span></div>
+          <div class="dfb-row" data-kind="ctx"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">61</span><span class="dfb-mark"></span></span><span class="dfb-text">def sample_backoff(job, response):</span></div>
+          <div class="dfb-row" data-kind="ctx"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">62</span><span class="dfb-mark"></span></span><span class="dfb-text">    delay = retry_after(response) or jitter(job.attempt)</span></div>
+          <div class="dfb-row" data-kind="del"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">63</span><span class="dfb-mark">&minus;</span></span><span class="dfb-text">    queue.push(job, delay=delay)</span></div>
+          <div class="dfb-row" data-kind="add"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">63</span><span class="dfb-mark">+</span></span><span class="dfb-text">    job.in_flight = False</span></div>
+          <div class="dfb-row" data-kind="add"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">64</span><span class="dfb-mark">+</span></span><span class="dfb-text">    queue.push(job, delay=delay)</span></div>
+          <div class="dfb-row" data-kind="ctx"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">65</span><span class="dfb-mark"></span></span><span class="dfb-text">    log.info("retry scheduled", attempt=job.attempt)</span></div>
+        </div>
+      </div>
+      <span class="dfb-sr" role="status"></span>
+    </figure>
+  </div>
+  <div class="dfb-group">
+    <p class="dfb-cap">Long path, long line</p>
+    <figure class="dfb-block" aria-label="Diff of src/sample/providers/an-unusually-long-sample-directory-name/handlers/retry_after_backoff_with_jitter_handler.py">
+      <figcaption class="dfb-head">
+        <span class="dfb-path" title="src/sample/providers/an-unusually-long-sample-directory-name/handlers/retry_after_backoff_with_jitter_handler.py">src/sample/providers/an-unusually-long-sample-directory-name/handlers/retry_after_backoff_with_jitter_handler.py</span>
+        <span class="dfb-stats" role="img" aria-label="2 lines added, 1 line removed"><span class="dfb-add">+2</span><span class="dfb-del">&minus;1</span></span>
+        <button type="button" class="dfb-copy" aria-label="Copy diff">
+          <svg class="dfb-ico dfb-ico-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>
+          <svg class="dfb-ico dfb-ico-done" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+          <span class="dfb-copy-label">Copy</span>
+        </button>
+      </figcaption>
+      <div class="dfb-body" role="region" tabindex="0" aria-label="Changed lines in the long sample handler" style="--dfb-digits:4">
+        <div class="dfb-rows">
+          <div class="dfb-row" data-kind="hunk"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true"></span><span class="dfb-mark"></span></span><span class="dfb-text">@@ -1203,3 +1203,4 @@</span></div>
+          <div class="dfb-row" data-kind="ctx"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">1203</span><span class="dfb-mark"></span></span><span class="dfb-text">def build_message(job):</span></div>
+          <div class="dfb-row" data-kind="del"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">1204</span><span class="dfb-mark">&minus;</span></span><span class="dfb-text">    return "retry scheduled"</span></div>
+          <div class="dfb-row" data-kind="add"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">1204</span><span class="dfb-mark">+</span></span><span class="dfb-text">    return "retry scheduled for the sample job after a demo rate limit response from the example provider, see the sample dispatch notes for the full backoff policy, limits and fallbacks"</span></div>
+          <div class="dfb-row" data-kind="add"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">1205</span><span class="dfb-mark">+</span></span><span class="dfb-text">    # demo note: keep the message under the sample provider's line limit</span></div>
+          <div class="dfb-row" data-kind="ctx"><span class="dfb-gut"><span class="dfb-no" aria-hidden="true">1206</span><span class="dfb-mark"></span></span><span class="dfb-text">def build_subject(job):</span></div>
+        </div>
+      </div>
+      <span class="dfb-sr" role="status"></span>
+    </figure>
+  </div>
+  <div class="dfb-group">
+    <p class="dfb-cap">Fenced code</p>
+    <figure class="dfb-block" aria-label="python code">
+      <figcaption class="dfb-head">
+        <span class="dfb-path">python</span>
+        <button type="button" class="dfb-copy" aria-label="Copy code">
+          <svg class="dfb-ico dfb-ico-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>
+          <svg class="dfb-ico dfb-ico-done" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+          <span class="dfb-copy-label">Copy</span>
+        </button>
+      </figcaption>
+      <pre class="dfb-plain" role="region" tabindex="0" aria-label="python code"><code>def sample_backoff(job, response):
+    delay = retry_after(response) or jitter(job.attempt)
+    job.in_flight = False
+    queue.push(job, delay=delay)
+    log.info("retry scheduled for the sample job after a demo rate limit response", attempt=job.attempt, delay=delay, queue="sample-dispatch-queue", provider="example-provider")</code></pre>
+      <span class="dfb-sr" role="status"></span>
+    </figure>
+  </div>
+  <div class="dfb-group">
+    <p class="dfb-cap">Empty diff</p>
+    <figure class="dfb-block" aria-label="Diff of docs/sample-notes.md">
+      <figcaption class="dfb-head">
+        <span class="dfb-path" title="docs/sample-notes.md">docs/sample-notes.md</span>
+        <span class="dfb-stats dfb-stats-zero" role="img" aria-label="0 lines added, 0 lines removed"><span class="dfb-add">+0</span><span class="dfb-del">&minus;0</span></span>
+        <button type="button" class="dfb-copy" aria-label="Copy diff" disabled>
+          <svg class="dfb-ico dfb-ico-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></svg>
+          <svg class="dfb-ico dfb-ico-done" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>
+          <span class="dfb-copy-label">Copy</span>
+        </button>
+      </figcaption>
+      <p class="dfb-empty">No text changes. The file reads the same before and after, so there is nothing to review or copy.</p>
+    </figure>
+  </div>
+</div>
+<script>
+(function(){
+  // Copy is the only scripted part. No observers or loops. The one-shot label timers check isConnected before they touch the page.
+  // Colour comes from CSS variables only, so the theme toggle recolours the blocks live.
+  var script = document.currentScript;
+  var stack = script && script.previousElementSibling;
+  if (!stack || !stack.classList.contains('dfb-stack')){
+    stack = script && script.parentElement ? script.parentElement.querySelector('.dfb-stack') : null;
+  }
+  if (!stack || stack.getAttribute('data-dfb-ready')) return;
+  stack.setAttribute('data-dfb-ready', '1');
+
+  // The text Copy puts on the clipboard. A diff is written back out as a plain unified diff, ASCII markers and no gutter. Plain code is its own text.
+  function textOf(block){
+    var rows = block.querySelectorAll('.dfb-row');
+    if (rows.length){
+      return Array.prototype.map.call(rows, function(row){
+        var kind = row.getAttribute('data-kind');
+        var mark = kind === 'add' ? '+' : (kind === 'del' ? '-' : (kind === 'ctx' ? ' ' : ''));
+        return mark + row.querySelector('.dfb-text').textContent;
+      }).join('\n');
+    }
+    var code = block.querySelector('code');
+    return code ? code.textContent : '';
+  }
+
+  // The Clipboard API first, a hidden textarea second. Either can be refused (no secure context, no permission), so the caller always gets a promise that can fail.
+  function legacyCopy(text){
+    return new Promise(function(resolve, reject){
+      var active = document.activeElement;
+      var ta = document.createElement('textarea');
+      ta.className = 'dfb-ghost';
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.setAttribute('aria-hidden', 'true');
+      ta.tabIndex = -1;
+      stack.appendChild(ta);
+      ta.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (err) { ok = false; }
+      stack.removeChild(ta);
+      if (active && active.focus) active.focus();
+      if (ok) resolve(); else reject(new Error('copy refused'));
+    });
+  }
+  function copyText(text){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(text).catch(function(){ return legacyCopy(text); });
+    }
+    return legacyCopy(text);
+  }
+
+  Array.prototype.forEach.call(stack.querySelectorAll('.dfb-block'), function(block){
+    var btn = block.querySelector('.dfb-copy');
+    var label = block.querySelector('.dfb-copy-label');
+    var live = block.querySelector('.dfb-sr');
+    var body = block.querySelector('.dfb-body, .dfb-plain');
+    if (!btn || !label || !live || !body) return;
+    var timer = 0;
+    function show(ok){
+      clearTimeout(timer);
+      btn.setAttribute('data-copied', ok ? 'true' : 'error');
+      label.textContent = ok ? 'Copied' : 'Copy failed';
+      live.textContent = ok ? 'Copied to the clipboard' : 'Copy failed. The text is selected, use the copy shortcut.';
+      if (!ok){
+        var range = document.createRange();
+        range.selectNodeContents(body);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      timer = setTimeout(function(){
+        timer = 0;
+        if (!stack.isConnected) return;
+        btn.removeAttribute('data-copied');
+        label.textContent = 'Copy';
+        live.textContent = '';
+      }, 1600);
+    }
+    btn.addEventListener('click', function(){
+      copyText(textOf(block)).then(function(){ show(true); }, function(){ show(false); });
+    });
+  });
+})();
+</script>
 </template>
 
 <div id="toasts" aria-live="polite"></div>
