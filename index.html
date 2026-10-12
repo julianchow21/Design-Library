@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.14 (10 Oct)</span>
+  <span class="ver">v1.15 (12 Oct)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -8750,6 +8750,881 @@ button.tf-toggle{border:none;background:none;padding:0;cursor:pointer}
       copyText(textOf(block)).then(function(){ show(true); }, function(){ show(false); });
     });
   });
+})();
+</script>
+</template>
+
+<!-- ============================================================================
+     FROM ODYSSEUS CONTEXT PANEL, Components. Context Panel and Guarded Switch,
+     clean rebuilds on house tokens, synthetic demo copy only.
+     ========================================================================== -->
+
+<template class="pattern" data-title="Context Panel" data-category="Components" data-source="Odysseus context panel v1.0.52 (5ffd075d), static/conversation.css, static/harbour-theme.css, static/js/contextPanel.js, static/js/contextModel.js" data-note="Chat context panel, 300px wide, built from stacked sections. Each has a quiet label on the left and an optional quiet text action on the right. Project is a card row: folder icon, name and a badge. Open is an outlined cloud and Local only is a filled lock, so the word and the icon shape carry the meaning and colour only adds to it. In scope is a mono path row and an Index unavailable row with an alert icon. Routing is a card with the model name, a Local or Cloud badge and a static switch row, with a footnote under it. Memory used marks rows Pinned or Recalled by an icon and a word. Long names and paths cut with an ellipsis and keep the full text in the title attribute. The strip over the frame flips Project through ready, local only, loading, empty, error and denied. Each has words and an icon, and the skeleton bars stay still under reduced motion. CSS decides where the panel goes and says so in a custom property on it, --cxp-mode, which is side, overlay or sheet. A small script reads it back with getComputedStyle and tags the frame with data-mode, and every layout rule keys off that one attribute. Here the frame is a size container, so it uses container queries (side from 640px, overlay from 420px, sheet below), because a card cannot change the viewport. The real panel uses viewport media queries (side from 1100px, drawer from 769px, sheet below), plus a drawer whenever a docked pane takes room, and reads the mode again on window resize, on a dock class change and through a ResizeObserver on the chat. Side sits beside the thread, which gains right padding, and has no role. Overlay is a drawer over the thread under the header, with a scrim. Sheet is the full width under the header, with no scrim. Both are dialogs: role dialog, aria-modal, Tab kept inside, Escape closes, the scrim closes the drawer, and focus returns to the toggle. A change of mode never opens or closes the panel. An open one converts where it stands. Into a drawer or sheet it gains the dialog parts and focus moves to its heading unless it is inside already. Back to side the dialog parts come off and focus stays put. The sheet enters with a fade only, since a sideways slide can leave it hanging off the edge. Side and drawer slide 12px, and reduced motion removes the entry. Under 600px wide the toggle, close button, text actions and rows reach 44px high. The two strips are demo only. Synthetic copy throughout.">
+<style>
+/* Context Panel, class prefix cxp-. Tokens only. Icons are plain strokes at the Icon System tiers, 16 for the toggle and close, 14 for rows and states, 12 for badges and marks. */
+/* Gallery only: give this card the full row so the frame shows at a real width. Delete this one rule when you copy the pattern. */
+.card:has(.cxp-wrap){grid-column:1/-1}
+.cxp-wrap{width:100%;max-width:760px;min-width:0;display:flex;flex-direction:column;gap:12px;text-align:left}
+.cxp-ico{display:block;flex:none}
+.cxp-i{display:inline-flex;flex:none;align-items:center}
+.cxp-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Demo only: the width and state strips, the mode readout and the three frame widths. Delete these rules and the strips when you copy the pattern, the frame then fills its column. */
+.cxp-demo{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cxp-demo-label{flex:none;margin-right:4px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.cxp-demo-btn{box-sizing:border-box;height:28px;margin:0;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font:inherit;font-size:12px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cxp-demo-btn:hover{background:var(--bg4);color:var(--text)}
+.cxp-demo-btn[aria-pressed="true"]{background:var(--bg4);box-shadow:inset 0 0 0 1px var(--text3);color:var(--text);font-weight:600}
+.cxp-demo-btn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.cxp-readout{margin-left:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text2)}
+.cxp-readout b{font-weight:600;color:var(--text)}
+.cxp-wrap[data-width="wide"] .cxp-frame{width:760px}
+.cxp-wrap[data-width="medium"] .cxp-frame{width:520px}
+.cxp-wrap[data-width="phone"] .cxp-frame{width:360px}
+/* The frame stands in for the chat. It is the size container, so the mode follows its width and not the window's. The panel says which mode it wants in --cxp-mode, the script reads it back into data-mode, and every rule below keys off that one attribute. */
+.cxp-frame{--cxp-panel:300px;--cxp-top:44px;position:relative;box-sizing:border-box;width:100%;max-width:100%;height:740px;border:1px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text);font-size:13px;line-height:1.4;overflow:hidden;container-name:cxp;container-type:inline-size}
+.cxp-main{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;min-width:0}
+.cxp-top{position:relative;z-index:4;display:flex;flex:none;align-items:center;gap:8px;box-sizing:border-box;height:var(--cxp-top);padding:0 8px 0 16px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.cxp-chat{flex:1 1 auto;min-width:0;overflow:hidden;font-size:13px;font-weight:600;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+.cxp-toggle{display:inline-grid;flex:none;place-items:center;width:32px;height:32px;margin:0;padding:0;border:0;border-radius:calc(var(--radius) - 2px);background:transparent;color:var(--text2);cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cxp-toggle:hover,.cxp-toggle[aria-expanded="true"]{background:var(--bg4);color:var(--text)}
+.cxp-thread{display:flex;flex:1 1 auto;flex-direction:column;gap:12px;min-height:0;padding:16px;overflow:hidden}
+.cxp-msg{margin:0;max-width:86%;font-size:13px;line-height:1.5;color:var(--text2);overflow-wrap:anywhere}
+.cxp-msg-user{align-self:flex-end;padding:8px 12px;border-radius:var(--radius);background:var(--bg4);color:var(--text)}
+/* The panel. Closed it is hidden. The mode is a custom property so the script can read the answer back. A sheet is the default, a drawer from 420px, a side panel from 640px. */
+.cxp-panel{--cxp-mode:sheet;position:absolute;z-index:3;top:0;right:0;bottom:0;box-sizing:border-box;display:flex;flex-direction:column;gap:20px;width:var(--cxp-panel);max-width:100%;padding:16px 18px 20px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;background:var(--bg);border-left:1px solid var(--border);color:var(--text)}
+.cxp-panel[hidden],.cxp-scrim[hidden]{display:none}
+@container cxp (min-width:420px){
+  .cxp-panel{--cxp-mode:overlay}
+}
+@container cxp (min-width:640px){
+  .cxp-panel{--cxp-mode:side}
+}
+.cxp-scrim{position:absolute;z-index:2;top:var(--cxp-top);right:0;bottom:0;left:0;background:color-mix(in srgb,var(--bg) 62%,transparent)}
+/* Side takes its column from the thread, which keeps the header and the toggle in reach. */
+.cxp-frame[data-mode="side"][data-open="true"] .cxp-main{padding-right:var(--cxp-panel)}
+/* A drawer sits over the thread under the header, with a scrim. The header is raised above both, so the drawer's shadow never paints over it and the toggle stays in reach. */
+.cxp-frame[data-mode="overlay"] .cxp-panel{top:var(--cxp-top);width:min(var(--cxp-panel),100%);box-shadow:var(--shadow-2)}
+/* A sheet is the whole width under the header and has no scrim. */
+.cxp-frame[data-mode="sheet"] .cxp-panel{top:var(--cxp-top);left:0;width:auto;max-width:none;border-left:0}
+.cxp-frame[data-mode="sheet"] .cxp-scrim{display:none}
+/* The entry is set when a person opens the panel, and never again by a change of mode, so converting an open panel does not replay it. A sheet fades and moves nothing. */
+@keyframes cxp-slide{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+@keyframes cxp-fade{from{opacity:0}to{opacity:1}}
+.cxp-panel[data-enter="slide"]{animation:cxp-slide var(--dur) ease-out both}
+.cxp-panel[data-enter="fade"],.cxp-scrim[data-enter]{animation:cxp-fade var(--dur) ease-out both}
+/* Head and sections. */
+.cxp-head,.cxp-section{flex:none}
+.cxp-head{display:flex;align-items:center;gap:8px;min-height:28px}
+.cxp-title{flex:none;margin:0;border-radius:calc(var(--radius) - 4px);font-size:13px;font-weight:600;color:var(--text)}
+.cxp-note{flex:1 1 auto;min-width:0;font-size:12px;color:var(--text2)}
+.cxp-close{display:inline-grid;flex:none;place-items:center;width:28px;height:28px;margin:0;padding:0;border:0;border-radius:calc(var(--radius) - 3px);background:transparent;color:var(--text2);cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cxp-close:hover{background:var(--bg4);color:var(--text)}
+.cxp-section{display:flex;flex-direction:column;gap:10px;min-width:0}
+.cxp-section-head{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:24px}
+.cxp-h{margin:0;font-size:12px;font-weight:500;color:var(--text2)}
+.cxp-link{flex:none;min-height:24px;margin:0;padding:0 6px;border:0;border-radius:calc(var(--radius) - 4px);background:transparent;color:var(--text2);font:inherit;font-size:12px;text-align:left;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cxp-link:hover{background:var(--bg4);color:var(--text)}
+.cxp-body{display:flex;flex-direction:column;gap:8px;min-width:0;border-radius:calc(var(--radius) - 4px)}
+.cxp-body > .cxp-link{align-self:flex-start;margin-left:-6px}
+.cxp-toggle:focus-visible,.cxp-close:focus-visible,.cxp-link:focus-visible,.cxp-title:focus-visible,.cxp-body:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* Cards and rows. */
+.cxp-card{display:flex;flex-direction:column;min-width:0;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg2)}
+.cxp-row{display:flex;align-items:center;gap:10px;min-width:0;padding:10px 12px}
+.cxp-row + .cxp-row{border-top:1px solid var(--border)}
+.cxp-folder{color:var(--text2)}
+.cxp-name{flex:1 1 auto;min-width:0;overflow:hidden;font-weight:500;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+.cxp-text{display:flex;flex:1 1 auto;flex-direction:column;gap:2px;min-width:0}
+.cxp-label{color:var(--text);overflow-wrap:anywhere}
+.cxp-sub{font-size:12px;color:var(--text2);overflow-wrap:anywhere}
+/* The badge says the route or the data class in words with a glyph. Colour only adds to it. Open and Cloud are an outlined cloud, Local and Local only are a filled lock. */
+.cxp-badge{display:inline-flex;flex:none;align-items:center;gap:5px;box-sizing:border-box;height:22px;padding:0 8px;border:1px solid transparent;border-radius:999px;font-size:12px;line-height:1;white-space:nowrap}
+.cxp-badge-open,.cxp-badge-cloud{border-color:color-mix(in srgb,var(--blue) 55%,transparent);color:var(--blue)}
+.cxp-badge-local,.cxp-badge-local-only{background:var(--green-soft);color:var(--green)}
+/* Loading, empty, error and denied. A glyph and words, and skeleton bars while it loads. */
+.cxp-state{display:flex;align-items:flex-start;gap:8px;min-width:0;color:var(--text2)}
+.cxp-state-ico{margin-top:2px;color:var(--text3)}
+.cxp-state[data-kind="loading"] .cxp-state-ico{color:var(--accent2);animation:cxp-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.cxp-state[data-kind="error"] .cxp-state-ico,.cxp-state[data-kind="denied"] .cxp-state-ico{color:var(--red)}
+.cxp-state-text{min-width:0;overflow-wrap:anywhere}
+.cxp-skels{display:flex;flex-direction:column;gap:8px}
+.cxp-skel{display:block;height:12px;border-radius:calc(var(--radius) - 4px);background:var(--border2);animation:cxp-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.cxp-skel-short{width:60%}
+@keyframes cxp-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+/* In scope. */
+.cxp-list{display:flex;flex-direction:column;margin:0;padding:0;list-style:none}
+.cxp-item,.cxp-index{display:flex;align-items:center;gap:8px;min-width:0;min-height:28px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text2)}
+.cxp-item-text{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cxp-warn{color:var(--amber)}
+/* Routing. The switch here is a picture of the setting, the Guarded Switch pattern is the live one. */
+.cxp-switch{position:relative;flex:none;width:36px;height:22px;border-radius:999px;background:var(--bg4);box-shadow:inset 0 0 0 1px var(--border2)}
+.cxp-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:999px;background:var(--text2)}
+.cxp-foot{margin:0;font-size:12px;line-height:1.5;color:var(--text2);overflow-wrap:anywhere}
+/* Memory used. */
+.cxp-memory-list{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.cxp-memory{display:flex;flex-direction:column;gap:3px;min-width:0}
+.cxp-mark{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
+.cxp-memory-text{display:-webkit-box;overflow:hidden;line-height:1.45;color:var(--text2);overflow-wrap:anywhere;-webkit-box-orient:vertical;-webkit-line-clamp:3;line-clamp:3}
+/* Touch sizes. Phones and tablets get 44px targets. */
+@media (max-width:600px),(pointer:coarse){
+  .cxp-demo-btn{min-height:44px}
+  .cxp-toggle,.cxp-close{width:44px;height:44px}
+  .cxp-link{min-height:44px}
+  .cxp-row{min-height:44px}
+}
+/* Forced colours override backgrounds, so the track gets an edge and the knob is drawn in system colours. System colours appear only here. */
+@media (forced-colors:active){
+  .cxp-switch{border:1px solid ButtonText;forced-color-adjust:none;background:Canvas;box-shadow:none}
+  .cxp-knob{forced-color-adjust:none;background:ButtonText}
+}
+@media (prefers-reduced-motion:reduce){
+  .cxp-panel[data-enter],.cxp-scrim[data-enter]{animation:none}
+  .cxp-state[data-kind="loading"] .cxp-state-ico,.cxp-skel{animation:none}
+  .cxp-demo-btn,.cxp-toggle,.cxp-close,.cxp-link{transition:none}
+}
+</style>
+<div class="cxp-wrap" data-width="wide">
+  <!-- Demo only: the width strip and the Project state strip. Delete both when you copy the pattern. -->
+  <div class="cxp-demo" role="group" aria-label="Demo frame width">
+    <span class="cxp-demo-label">Width</span>
+    <button type="button" class="cxp-demo-btn" data-cxp-width="wide" aria-pressed="true">Wide</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-width="medium" aria-pressed="false">Medium</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-width="phone" aria-pressed="false">Phone</button>
+    <span class="cxp-readout">--cxp-mode: <b class="cxp-readout-mode">side</b>, frame <span class="cxp-readout-width">758px</span></span>
+  </div>
+  <div class="cxp-demo" role="group" aria-label="Demo Project section state">
+    <span class="cxp-demo-label">Project</span>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="ready" aria-pressed="true">Ready</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="local" aria-pressed="false">Local only</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="loading" aria-pressed="false">Loading</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="empty" aria-pressed="false">Empty</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="error" aria-pressed="false">Error</button>
+    <button type="button" class="cxp-demo-btn" data-cxp-state="denied" aria-pressed="false">Denied</button>
+  </div>
+  <div class="cxp-frame" role="group" aria-label="Sample chat with a context panel" data-open="false">
+    <div class="cxp-main">
+      <div class="cxp-top">
+        <span class="cxp-chat">Fix the sample retry loop</span>
+        <button type="button" class="cxp-toggle" title="Context panel" aria-label="Context panel" aria-expanded="false" aria-controls="cxp-panel">
+          <svg class="cxp-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="2.2"/><path d="M14.5 4.5v15"/></svg>
+        </button>
+      </div>
+      <div class="cxp-thread">
+        <p class="cxp-msg cxp-msg-user">Why does the sample queue stall after a retry?</p>
+        <p class="cxp-msg">The retry path pushes the job back before it clears the in-flight flag, so the queue still counts it as running. I can swap those two lines and add a test.</p>
+        <p class="cxp-msg cxp-msg-user">Do that, and keep the patch small.</p>
+      </div>
+    </div>
+    <div class="cxp-scrim" hidden></div>
+    <section class="cxp-panel" id="cxp-panel" aria-labelledby="cxp-title" hidden>
+      <div class="cxp-head">
+        <h2 class="cxp-title" id="cxp-title" tabindex="-1">Context</h2>
+        <span class="cxp-note">this chat</span>
+        <button type="button" class="cxp-close" title="Close" aria-label="Close context panel">
+          <svg class="cxp-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11"/><path d="m17.5 6.5-11 11"/></svg>
+        </button>
+      </div>
+      <section class="cxp-section" aria-labelledby="cxp-h-project">
+        <div class="cxp-section-head"><h3 class="cxp-h" id="cxp-h-project">Project</h3></div>
+        <div class="cxp-body cxp-project-body" tabindex="-1" aria-live="polite" aria-busy="false" data-state="ready">
+          <div class="cxp-card">
+            <div class="cxp-row">
+              <span class="cxp-i cxp-folder" aria-hidden="true"><svg class="cxp-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+              <span class="cxp-name" title="Synthetic Dispatch">Synthetic Dispatch</span>
+              <span class="cxp-badge cxp-badge-open"><span class="cxp-i" aria-hidden="true"><svg class="cxp-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.5 18.5a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17.6 9.8a4.35 4.35 0 0 1-.4 8.7z"/></svg></span><span>Open</span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="cxp-section" aria-labelledby="cxp-h-scope">
+        <div class="cxp-section-head"><h3 class="cxp-h" id="cxp-h-scope">In scope</h3><button type="button" class="cxp-link">Add files</button></div>
+        <div class="cxp-body">
+          <ul class="cxp-list" role="list">
+            <li class="cxp-item">
+              <span class="cxp-i cxp-folder" aria-hidden="true"><svg class="cxp-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span>
+              <span class="cxp-item-text" title="/home/demo-user/projects/sample-workspace/src/dispatch/providers/an-unusually-long-sample-directory-name">/home/demo-user/projects/sample-workspace/src/dispatch/providers/an-unusually-long-sample-directory-name</span>
+            </li>
+          </ul>
+          <div class="cxp-index">
+            <span class="cxp-i cxp-warn" aria-hidden="true"><svg class="cxp-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/></svg></span>
+            <span class="cxp-item-text">Index unavailable</span>
+          </div>
+        </div>
+      </section>
+      <section class="cxp-section" aria-labelledby="cxp-h-routing">
+        <div class="cxp-section-head"><h3 class="cxp-h" id="cxp-h-routing">Routing</h3></div>
+        <div class="cxp-card">
+          <div class="cxp-row">
+            <span class="cxp-name" title="Synthetic Local 30B">Synthetic Local 30B</span>
+            <span class="cxp-badge cxp-badge-local"><span class="cxp-i" aria-hidden="true"><svg class="cxp-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span>Local</span></span>
+          </div>
+          <div class="cxp-row">
+            <span class="cxp-text"><span class="cxp-label">Cloud fallback</span><span class="cxp-sub">Synthetic Cloud, only for open sources</span></span>
+            <span class="cxp-switch" aria-hidden="true"><span class="cxp-knob"></span></span>
+            <span class="cxp-sr">Off</span>
+          </div>
+        </div>
+        <p class="cxp-foot">Local-only sources never leave this machine. Once this chat reads one, cloud stays off for the rest of the chat.</p>
+      </section>
+      <section class="cxp-section" aria-labelledby="cxp-h-memory">
+        <div class="cxp-section-head"><h3 class="cxp-h" id="cxp-h-memory">Memory used</h3><button type="button" class="cxp-link">Open memories</button></div>
+        <div class="cxp-body">
+          <ul class="cxp-memory-list" role="list">
+            <li class="cxp-memory">
+              <span class="cxp-mark"><span class="cxp-i" aria-hidden="true"><svg class="cxp-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.2 4h5.6l-.7 4.6 2.6 3v1.4H7.3v-1.4l2.6-3z" fill="currentColor"/><path d="M12 14v6"/></svg></span><span>Pinned</span></span>
+              <span class="cxp-memory-text" title="Prefers small, reviewable patches">Prefers small, reviewable patches</span>
+            </li>
+            <li class="cxp-memory">
+              <span class="cxp-mark"><span class="cxp-i" aria-hidden="true"><svg class="cxp-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.3 6.3A8 8 0 1 1 4.6 14"/><path d="M3 6.3h3.3v3.3"/></svg></span><span>Recalled</span></span>
+              <span class="cxp-memory-text" title="Sample tests run with the quick flag first, then the full suite once before anything is shared, and the fixed seed lives in the notes file next to the queue code.">Sample tests run with the quick flag first, then the full suite once before anything is shared, and the fixed seed lives in the notes file next to the queue code.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </section>
+  </div>
+</div>
+<script>
+(function(){
+  'use strict';
+  // The mode switch is the pattern. The width strip, the Project state strip and the fake Retry timer are demo only.
+  // One ResizeObserver watches the frame and one timer fakes the Retry. Both stop the moment the card leaves the DOM, so cycling the filters never stacks them.
+  // Colour comes from CSS variables only, so the theme toggle recolours the card live.
+  var script = document.currentScript;
+  var wrap = script && script.previousElementSibling;
+  if (!wrap || !wrap.classList.contains('cxp-wrap')){
+    wrap = script && script.parentElement ? script.parentElement.querySelector('.cxp-wrap') : null;
+  }
+  if (!wrap || wrap.getAttribute('data-cxp-ready')) return;
+  var frame = wrap.querySelector('.cxp-frame');
+  var toggle = wrap.querySelector('.cxp-toggle');
+  var scrim = wrap.querySelector('.cxp-scrim');
+  var panel = wrap.querySelector('.cxp-panel');
+  var heading = wrap.querySelector('.cxp-title');
+  var closeBtn = wrap.querySelector('.cxp-close');
+  var projectBody = wrap.querySelector('.cxp-project-body');
+  var readout = wrap.querySelector('.cxp-readout-mode');
+  var readoutWidth = wrap.querySelector('.cxp-readout-width');
+  var widthBtns = wrap.querySelectorAll('[data-cxp-width]');
+  var stateBtns = wrap.querySelectorAll('[data-cxp-state]');
+  if (!frame || !toggle || !scrim || !panel || !heading || !closeBtn || !projectBody || !readout || !widthBtns.length || !stateBtns.length) return;
+  wrap.setAttribute('data-cxp-ready', '1');
+
+  // A fresh id per instance, so two live copies never share an aria-controls or aria-labelledby target.
+  var uid = Math.random().toString(36).slice(2, 8);
+  panel.id = 'cxp-panel-' + uid;
+  heading.id = 'cxp-title-' + uid;
+  toggle.setAttribute('aria-controls', panel.id);
+  panel.setAttribute('aria-labelledby', heading.id);
+  Array.prototype.forEach.call(panel.querySelectorAll('.cxp-section'), function(section, index){
+    var h = section.querySelector('.cxp-h');
+    if (!h) return;
+    h.id = 'cxp-h-' + uid + '-' + index;
+    section.setAttribute('aria-labelledby', h.id);
+  });
+
+  var MODES = ['side', 'overlay', 'sheet'];
+  var open = false;
+  var mode = '';
+  var alive = true;
+  var observer = null;
+  var queued = 0;
+  var retryTimer = 0;
+
+  // Teardown. Everything that outlives a click is stopped here, and every async callback asks connected() first.
+  function stop(){
+    alive = false;
+    if (observer){ observer.disconnect(); observer = null; }
+    if (queued){ cancelAnimationFrame(queued); queued = 0; }
+    if (retryTimer){ clearTimeout(retryTimer); retryTimer = 0; }
+  }
+  function connected(){
+    if (!alive) return false;
+    if (!wrap.isConnected){ stop(); return false; }
+    return true;
+  }
+
+  // The stylesheet decides the layout and says which in --cxp-mode on the panel. This reads it back.
+  // A value it cannot read is a drawer, which never takes room from the thread.
+  function readMode(){
+    var raw = '';
+    try { raw = getComputedStyle(panel).getPropertyValue('--cxp-mode'); } catch (err) { raw = ''; }
+    var word = String(raw || '').trim().replace(/^["']|["']$/g, '').toLowerCase();
+    return MODES.indexOf(word) >= 0 ? word : 'overlay';
+  }
+
+  // The dialog parts. Only a drawer or a sheet is a dialog, a side panel has no role.
+  function applyAria(){
+    var dialog = open && mode !== 'side';
+    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    panel.hidden = !open;
+    if (dialog){
+      panel.setAttribute('role', 'dialog');
+      panel.setAttribute('aria-modal', 'true');
+    } else {
+      panel.removeAttribute('role');
+      panel.removeAttribute('aria-modal');
+    }
+    scrim.hidden = !(open && mode === 'overlay');
+    frame.setAttribute('data-open', open ? 'true' : 'false');
+  }
+
+  // The mode changed under an open panel. It is never closed or opened by this, it converts where it stands.
+  // Into a drawer or a sheet it becomes a dialog and focus moves to the heading unless it is inside already.
+  // Back to side the dialog parts come off and focus stays where it is.
+  function follow(previous){
+    var becomesModal = previous === 'side' && mode !== 'side';
+    applyAria();
+    if (becomesModal && !panel.contains(document.activeElement)) heading.focus();
+  }
+
+  function sync(){
+    var previous = mode;
+    mode = readMode();
+    frame.setAttribute('data-mode', mode);
+    readout.textContent = mode;
+    if (readoutWidth) readoutWidth.textContent = frame.clientWidth + 'px';
+    if (open && previous && previous !== mode) follow(previous);
+    return mode;
+  }
+
+  function openPanel(options){
+    if (open) return;
+    var wantFocus = !options || options.focus !== false;
+    var animate = !options || options.animate !== false;
+    // Show it first, so the mode is read from a panel that has a box.
+    panel.hidden = false;
+    sync();
+    open = true;
+    if (animate){
+      panel.setAttribute('data-enter', mode === 'sheet' ? 'fade' : 'slide');
+      if (mode === 'overlay') scrim.setAttribute('data-enter', '');
+    }
+    applyAria();
+    if (wantFocus && mode !== 'side') heading.focus();
+  }
+
+  function closePanel(){
+    if (!open) return;
+    open = false;
+    panel.removeAttribute('data-enter');
+    scrim.removeAttribute('data-enter');
+    applyAria();
+    toggle.focus();
+  }
+
+  // In a drawer or a sheet Tab stays inside, the way it does in any dialog.
+  function focusables(){
+    var found = panel.querySelectorAll('button, [href], input, select, textarea, [tabindex]');
+    return Array.prototype.filter.call(found, function(node){
+      if (node.disabled || node.getAttribute('tabindex') === '-1') return false;
+      return !node.closest('[hidden]');
+    });
+  }
+  function trapTab(event){
+    var items = focusables();
+    if (!items.length) return;
+    var first = items[0];
+    var last = items[items.length - 1];
+    var active = document.activeElement;
+    var inside = panel.contains(active);
+    if (event.shiftKey && (active === first || active === heading || !inside)){
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (active === last || !inside)){
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
+  toggle.addEventListener('click', function(){ if (open) closePanel(); else openPanel(); });
+  closeBtn.addEventListener('click', closePanel);
+  scrim.addEventListener('click', closePanel);
+  wrap.addEventListener('keydown', function(event){
+    if (!open) return;
+    if (event.key === 'Escape'){
+      event.preventDefault();
+      closePanel();
+    } else if (event.key === 'Tab' && mode !== 'side' && frame.contains(event.target)){
+      trapTab(event);
+    }
+  });
+
+  // The mode is read again whenever the frame changes size. One queued frame answers a whole burst of resizes.
+  function schedule(){
+    if (queued || !alive) return;
+    queued = requestAnimationFrame(function(){
+      queued = 0;
+      if (!connected()) return;
+      sync();
+    });
+  }
+  if (typeof ResizeObserver === 'function'){
+    observer = new ResizeObserver(function(){
+      if (connected()) schedule();
+    });
+    observer.observe(frame);
+  }
+
+  // Demo only: the width strip. The frame width changes, CSS answers with a mode, and the next read picks it up.
+  Array.prototype.forEach.call(widthBtns, function(btn){
+    btn.addEventListener('click', function(){
+      wrap.setAttribute('data-width', btn.getAttribute('data-cxp-width'));
+      Array.prototype.forEach.call(widthBtns, function(other){
+        other.setAttribute('aria-pressed', other === btn ? 'true' : 'false');
+      });
+      sync();
+    });
+  });
+
+  // Demo only: the Project section states. Text is written with textContent, only the icon constants are markup.
+  var ATTRS = 'class="cxp-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var PATHS = {
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    cloud: '<path d="M7.5 18.5a4 4 0 0 1-.5-7.97A5.5 5.5 0 0 1 17.6 9.8a4.35 4.35 0 0 1-.4 8.7z"/>',
+    lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+    lockLine: '<rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.7v.1"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/>'
+  };
+  function el(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  function glyph(name, size, className){
+    var holder = el('span', 'cxp-i' + (className ? ' ' + className : ''));
+    holder.setAttribute('aria-hidden', 'true');
+    holder.innerHTML = '<svg ' + ATTRS + ' width="' + size + '" height="' + size + '">' + PATHS[name] + '</svg>';
+    return holder;
+  }
+  function badge(kind){
+    var isOpen = kind === 'open';
+    var pill = el('span', 'cxp-badge cxp-badge-' + kind);
+    pill.appendChild(glyph(isOpen ? 'cloud' : 'lock', 12));
+    pill.appendChild(el('span', '', isOpen ? 'Open' : 'Local only'));
+    return pill;
+  }
+  function stateLine(kind, icon, text){
+    var line = el('div', 'cxp-state');
+    line.setAttribute('data-kind', kind);
+    line.appendChild(glyph(icon, 14, 'cxp-state-ico'));
+    line.appendChild(el('span', 'cxp-state-text', text));
+    return line;
+  }
+  function action(label, focusKey, run){
+    var button = el('button', 'cxp-link', label);
+    button.type = 'button';
+    button.setAttribute('data-focus-key', focusKey);
+    button.addEventListener('click', run);
+    return button;
+  }
+  var PROJECTS = {
+    ready: { name: 'Synthetic Dispatch', badge: 'open' },
+    local: { name: 'Synthetic Dispatch retry experiments archive', badge: 'local-only' }
+  };
+  function projectNodes(state){
+    if (PROJECTS[state]){
+      var project = PROJECTS[state];
+      var card = el('div', 'cxp-card');
+      var row = el('div', 'cxp-row');
+      var name = el('span', 'cxp-name', project.name);
+      name.title = project.name;
+      row.appendChild(glyph('folder', 14, 'cxp-folder'));
+      row.appendChild(name);
+      row.appendChild(badge(project.badge));
+      card.appendChild(row);
+      return [card];
+    }
+    if (state === 'loading'){
+      var bars = el('div', 'cxp-skels');
+      bars.setAttribute('aria-hidden', 'true');
+      bars.appendChild(el('span', 'cxp-skel'));
+      bars.appendChild(el('span', 'cxp-skel cxp-skel-short'));
+      return [stateLine('loading', 'clock', 'Reading the project'), bars];
+    }
+    if (state === 'empty'){
+      return [stateLine('empty', 'info', 'No workspace for your next message'), action('Choose workspace', 'choose', function(){ setProject('ready'); })];
+    }
+    if (state === 'error'){
+      return [stateLine('error', 'alert', 'Could not read the project.'), action('Retry', 'retry', retry)];
+    }
+    return [stateLine('denied', 'lockLine', 'Project details are not available to this account.')];
+  }
+  // A control that is rebuilt hands focus to its twin with the same data-focus-key, or to the section body.
+  function setProject(state){
+    var nodes = projectNodes(state);
+    if (!nodes) return;
+    if (retryTimer){ clearTimeout(retryTimer); retryTimer = 0; }
+    var active = document.activeElement;
+    var hadFocus = !!(active && projectBody.contains(active));
+    var key = hadFocus && active.getAttribute ? active.getAttribute('data-focus-key') || '' : '';
+    projectBody.textContent = '';
+    nodes.forEach(function(node){ projectBody.appendChild(node); });
+    projectBody.setAttribute('data-state', state);
+    projectBody.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+    Array.prototype.forEach.call(stateBtns, function(btn){
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-cxp-state') === state ? 'true' : 'false');
+    });
+    if (hadFocus){
+      var twin = key ? projectBody.querySelector('[data-focus-key="' + key + '"]') : null;
+      (twin || projectBody).focus();
+    }
+  }
+  // Fake Retry: loading for a moment, then ready. A real panel asks the server again here.
+  function retry(){
+    setProject('loading');
+    retryTimer = setTimeout(function(){
+      retryTimer = 0;
+      if (!connected()) return;
+      setProject('ready');
+    }, 900);
+  }
+  Array.prototype.forEach.call(stateBtns, function(btn){
+    btn.addEventListener('click', function(){ setProject(btn.getAttribute('data-cxp-state')); });
+  });
+
+  // Start. The first read applies a standing choice: a side panel starts open, a drawer or a sheet is for one look and starts closed.
+  sync();
+  if (mode === 'side') openPanel({ focus: false, animate: false });
+  else applyAria();
+})();
+</script>
+</template>
+
+<template class="pattern" data-title="Guarded Switch" data-category="Components" data-source="Odysseus context panel v1.0.52 (5ffd075d), static/js/contextPanel.js, static/js/contextModel.js, static/conversation.css" data-note="Settings switch for a write that widens what leaves the machine, so turning it on needs a confirm and the state always comes from the server, never from the click. The control is one button with role switch and aria-checked, holding a label, a sub line and a knob. Turning on opens an inline confirm under the row (not a modal) whose sentence names the exact effect and target, with Turn on and Cancel. Focus moves to the confirm, Escape and Cancel close it and focus returns to the switch. Turn on sends the write to a server (a closured stand-in with a short timeout here). The switch is aria-busy and aria-disabled while it runs, a Saving line with a clock icon says so, and nothing has flipped yet. When the reply lands the switch is drawn from it, whatever the click asked for. Turning off needs no confirm but takes the same road. Four demo rows. Off and can be enabled. On. Disabled, with a lock icon and the reason as visible text, the switch aria-disabled, out of the tab order, still labelled, and linked to the reason by aria-describedby. Refused, where the server answers 409 with a sentence, the switch stays off and an alert icon with that sentence appears under the row in a polite live region. The knob slides in the house duration and stays still under reduced motion. Under 600px wide the switch row and the confirm buttons reach 44px high. The captions and the stand-in server are demo only. The real server must recheck identity and policy on every write and refuse a turn on that carries no confirm. Synthetic copy throughout.">
+<style>
+/* Guarded Switch, class prefix gsw-. Tokens only. Icons are plain strokes at the Icon System tier 14, for the status and reason lines. */
+/* Gallery only: give this card the full row so the note reads at a normal width. Delete this one rule when you copy the pattern. */
+.card:has(.gsw-wrap){grid-column:1/-1}
+.gsw-wrap{width:100%;max-width:440px;min-width:0;display:flex;flex-direction:column;gap:16px;text-align:left}
+.gsw-ico{display:block;flex:none}
+/* Demo only: the small caption over each row. Delete this rule and the captions when you copy the pattern. */
+.gsw-cap{margin:0 0 6px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.gsw-item{min-width:0}
+.gsw-card{box-sizing:border-box;width:100%;min-width:0;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text)}
+/* The whole row is the switch, so the target is as wide as the row. The state is on the button and the knob only draws it. */
+.gsw-switch{display:flex;align-items:center;gap:12px;box-sizing:border-box;width:100%;min-height:52px;margin:0;padding:10px 12px;border:0;border-radius:calc(var(--radius-lg) - 1px);background:transparent;color:var(--text);font:inherit;text-align:left;cursor:pointer;transition:background var(--dur) ease-out}
+.gsw-switch:hover:not([aria-disabled="true"]){background:var(--bg3)}
+.gsw-switch:focus-visible{outline:2px solid var(--accent2);outline-offset:-2px}
+.gsw-text{display:flex;flex:1 1 auto;flex-direction:column;gap:2px;min-width:0}
+.gsw-label{font-size:13px;font-weight:500;color:var(--text);overflow-wrap:anywhere}
+.gsw-sub{font-size:12px;line-height:1.4;color:var(--text2);overflow-wrap:anywhere}
+.gsw-track{position:relative;flex:none;width:36px;height:22px;border-radius:999px;background:var(--bg4);box-shadow:inset 0 0 0 1px var(--border2);transition:background var(--dur) ease-out,box-shadow var(--dur) ease-out,opacity var(--dur) ease-out}
+.gsw-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:999px;background:var(--text2);transition:transform var(--dur) ease-out,background var(--dur) ease-out}
+.gsw-switch[aria-checked="true"] .gsw-track{background:var(--blue);box-shadow:none}
+.gsw-switch[aria-checked="true"] .gsw-knob{background:var(--bg2);transform:translateX(14px)}
+.gsw-switch[aria-disabled="true"]{cursor:not-allowed}
+.gsw-switch[aria-disabled="true"] .gsw-track{opacity:.55}
+.gsw-switch[aria-busy="true"]{cursor:progress}
+/* Lines under the row. The reason for a blocked switch is always visible text, the status line is a polite live region that sits in the page from the start, empty. */
+.gsw-reason{display:flex;align-items:flex-start;gap:8px;margin:0;padding:0 12px 12px;font-size:12px;line-height:1.45;color:var(--text2)}
+.gsw-reason[hidden]{display:none}
+.gsw-reason-ico{display:inline-flex;flex:none;margin-top:1px;color:var(--text3)}
+.gsw-reason-text{min-width:0;overflow-wrap:anywhere}
+.gsw-status{margin:0}
+.gsw-status:not(:empty){display:flex;align-items:flex-start;gap:8px;padding:0 12px 12px;font-size:12px;line-height:1.45;color:var(--text)}
+.gsw-status-ico{display:inline-flex;flex:none;margin-top:1px;color:var(--text2)}
+.gsw-status[data-kind="busy"] .gsw-status-ico{color:var(--accent2);animation:gsw-pulse calc(var(--dur) * 8) ease-in-out infinite}
+.gsw-status[data-kind="ok"] .gsw-status-ico{color:var(--green)}
+.gsw-status[data-kind="error"] .gsw-status-ico{color:var(--red)}
+.gsw-status-text{min-width:0;overflow-wrap:anywhere}
+@keyframes gsw-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* The inline confirm. Not a modal, it sits under the row it belongs to and names the exact effect. */
+.gsw-confirm{display:flex;flex-direction:column;gap:10px;margin:0 12px 12px;padding:12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3)}
+.gsw-confirm[hidden]{display:none}
+.gsw-confirm-text{margin:0;border-radius:calc(var(--radius) - 4px);font-size:13px;line-height:1.45;color:var(--text);overflow-wrap:anywhere}
+.gsw-confirm-text:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.gsw-confirm-actions{display:flex;flex-wrap:wrap;gap:8px}
+.gsw-btn{box-sizing:border-box;height:34px;margin:0;padding:0 14px;border:1px solid var(--border2);border-radius:var(--radius);background:transparent;color:var(--text);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--dur) ease-out,box-shadow var(--dur) ease-out,transform var(--dur) var(--spring)}
+.gsw-btn:hover{background:var(--bg4)}
+.gsw-btn:active{transform:scale(.97)}
+.gsw-btn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.gsw-btn.gsw-yes{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--grad-2));color:var(--onacc);font-weight:600}
+.gsw-btn.gsw-yes:hover{box-shadow:inset 0 0 0 999px color-mix(in srgb,var(--text) 10%,transparent)}
+.gsw-btn.gsw-no{border-color:transparent;color:var(--text2)}
+.gsw-btn.gsw-no:hover{color:var(--text)}
+.gsw-foot{margin:0;font-size:12px;line-height:1.45;color:var(--text2);overflow-wrap:anywhere}
+/* Touch sizes. Phones and tablets get 44px targets for the switch row and the confirm buttons. */
+@media (max-width:600px),(pointer:coarse){
+  .gsw-switch{min-height:44px}
+  .gsw-btn{min-height:44px}
+  .gsw-confirm-actions .gsw-btn{flex:1 1 auto}
+}
+/* Forced colours override backgrounds, so the track gets an edge and the knob is drawn in system colours. The knob position still says on or off. System colours appear only here. */
+@media (forced-colors:active){
+  .gsw-track{border:1px solid ButtonText;forced-color-adjust:none;background:Canvas;box-shadow:none}
+  .gsw-knob{forced-color-adjust:none;background:ButtonText}
+  .gsw-switch[aria-checked="true"] .gsw-track{border-color:Highlight;background:Highlight}
+  .gsw-switch[aria-checked="true"] .gsw-knob{background:HighlightText}
+}
+@media (prefers-reduced-motion:reduce){
+  .gsw-status[data-kind="busy"] .gsw-status-ico{animation:none}
+  .gsw-switch,.gsw-track,.gsw-knob,.gsw-btn{transition:none}
+}
+</style>
+<div class="gsw-wrap">
+  <div class="gsw-item" data-gsw="off">
+    <!-- Demo only: the caption over each row. -->
+    <p class="gsw-cap">Off, can be enabled</p>
+    <div class="gsw-card">
+      <button type="button" class="gsw-switch" role="switch" aria-checked="false">
+        <span class="gsw-text"><span class="gsw-label">Cloud fallback</span><span class="gsw-sub">Synthetic Cloud, only for open sources</span></span>
+        <span class="gsw-track" aria-hidden="true"><span class="gsw-knob"></span></span>
+      </button>
+      <p class="gsw-reason" hidden><span class="gsw-reason-ico" aria-hidden="true"><svg class="gsw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="gsw-reason-text"></span></p>
+      <div class="gsw-status" role="status"></div>
+      <div class="gsw-confirm" role="group" aria-label="Confirm turning on cloud fallback" hidden>
+        <p class="gsw-confirm-text" tabindex="-1">Let Synthetic Cloud answer in Synthetic chat when the local model cannot, for open sources only?</p>
+        <div class="gsw-confirm-actions">
+          <button type="button" class="gsw-btn gsw-yes">Turn on</button>
+          <button type="button" class="gsw-btn gsw-no">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gsw-item" data-gsw="on">
+    <p class="gsw-cap">On, turning off needs no confirm</p>
+    <div class="gsw-card">
+      <button type="button" class="gsw-switch" role="switch" aria-checked="true">
+        <span class="gsw-text"><span class="gsw-label">Cloud fallback</span><span class="gsw-sub">Synthetic Cloud, only for open sources</span></span>
+        <span class="gsw-track" aria-hidden="true"><span class="gsw-knob"></span></span>
+      </button>
+      <p class="gsw-reason" hidden><span class="gsw-reason-ico" aria-hidden="true"><svg class="gsw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="gsw-reason-text"></span></p>
+      <div class="gsw-status" role="status"></div>
+      <div class="gsw-confirm" role="group" aria-label="Confirm turning on cloud fallback" hidden>
+        <p class="gsw-confirm-text" tabindex="-1">Let Synthetic Cloud answer in Synthetic chat when the local model cannot, for open sources only?</p>
+        <div class="gsw-confirm-actions">
+          <button type="button" class="gsw-btn gsw-yes">Turn on</button>
+          <button type="button" class="gsw-btn gsw-no">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gsw-item" data-gsw="blocked">
+    <p class="gsw-cap">Disabled, with the reason</p>
+    <div class="gsw-card">
+      <button type="button" class="gsw-switch" role="switch" aria-checked="false" aria-disabled="true" tabindex="-1">
+        <span class="gsw-text"><span class="gsw-label">Cloud fallback</span><span class="gsw-sub">Synthetic Cloud, only for open sources</span></span>
+        <span class="gsw-track" aria-hidden="true"><span class="gsw-knob"></span></span>
+      </button>
+      <p class="gsw-reason"><span class="gsw-reason-ico" aria-hidden="true"><svg class="gsw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="gsw-reason-text">This chat has read a local-only source, so cloud stays off for the rest of it.</span></p>
+      <div class="gsw-status" role="status"></div>
+      <div class="gsw-confirm" role="group" aria-label="Confirm turning on cloud fallback" hidden>
+        <p class="gsw-confirm-text" tabindex="-1">Let Synthetic Cloud answer in Synthetic chat when the local model cannot, for open sources only?</p>
+        <div class="gsw-confirm-actions">
+          <button type="button" class="gsw-btn gsw-yes">Turn on</button>
+          <button type="button" class="gsw-btn gsw-no">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="gsw-item" data-gsw="refuse">
+    <p class="gsw-cap">Refused by the server</p>
+    <div class="gsw-card">
+      <button type="button" class="gsw-switch" role="switch" aria-checked="false">
+        <span class="gsw-text"><span class="gsw-label">Cloud fallback</span><span class="gsw-sub">Synthetic Cloud, only for open sources</span></span>
+        <span class="gsw-track" aria-hidden="true"><span class="gsw-knob"></span></span>
+      </button>
+      <p class="gsw-reason" hidden><span class="gsw-reason-ico" aria-hidden="true"><svg class="gsw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span><span class="gsw-reason-text"></span></p>
+      <div class="gsw-status" role="status"></div>
+      <div class="gsw-confirm" role="group" aria-label="Confirm turning on cloud fallback" hidden>
+        <p class="gsw-confirm-text" tabindex="-1">Let Synthetic Cloud answer in Synthetic chat when the local model cannot, for open sources only?</p>
+        <div class="gsw-confirm-actions">
+          <button type="button" class="gsw-btn gsw-yes">Turn on</button>
+          <button type="button" class="gsw-btn gsw-no">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="gsw-foot">Local-only sources never leave this machine. Once a chat reads one, cloud stays off for the rest of that chat, whatever the switch says.</p>
+</div>
+<script>
+(function(){
+  'use strict';
+  // Demo script. The server below is a stand-in, a closured object that answers after a short timeout. A real switch sends its write to its own endpoint and draws whatever comes back.
+  // There are no observers or loops. The one-shot request timers check isConnected before they touch the page, and teardown cancels them, so cycling the filters never stacks anything.
+  // Colour comes from CSS variables only, so the theme toggle recolours the rows live.
+  var script = document.currentScript;
+  var wrap = script && script.previousElementSibling;
+  if (!wrap || !wrap.classList.contains('gsw-wrap')){
+    wrap = script && script.parentElement ? script.parentElement.querySelector('.gsw-wrap') : null;
+  }
+  if (!wrap || wrap.getAttribute('data-gsw-ready')) return;
+  var items = wrap.querySelectorAll('.gsw-item');
+  if (!items.length) return;
+  wrap.setAttribute('data-gsw-ready', '1');
+
+  // A fresh id per instance, so two live copies never share an aria-labelledby or aria-describedby target.
+  var uid = Math.random().toString(36).slice(2, 8);
+  var alive = true;
+  var servers = [];
+  function stop(){
+    alive = false;
+    servers.forEach(function(server){ server.cancel(); });
+  }
+  function connected(){
+    if (!alive) return false;
+    if (!wrap.isConnected){ stop(); return false; }
+    return true;
+  }
+
+  var ATTRS = 'class="gsw-ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var ICONS = {
+    clock: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></svg>',
+    check: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.5 2.5 4.6-5.1"/></svg>',
+    alert: '<svg ' + ATTRS + '><circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/></svg>'
+  };
+
+  // The stand-in server. It owns the truth. A write is {cloud_fallback, confirm}, the answer is a status and a body, and the body always carries the state the server holds now.
+  // It refuses a turn on that carries no confirm, so the confirm is part of the contract and not only of the screen.
+  var LATENCY = 700;
+  var SEEDS = {
+    off: { on: false },
+    on: { on: true },
+    blocked: { on: false, blocked: 'This chat has read a local-only source, so cloud stays off for the rest of it.' },
+    refuse: { on: false, refuse: 'Routing for this chat changed on another device a moment ago. Nothing was changed. Check the setting and try again.' }
+  };
+  function makeServer(seed){
+    var on = seed.on === true;
+    var blocked = seed.blocked || '';
+    var timer = 0;
+    function view(){ return { on: on, blocked: blocked }; }
+    return {
+      read: view,
+      write: function(want, confirmed, done){
+        clearTimeout(timer);
+        timer = setTimeout(function(){
+          timer = 0;
+          var body = view();
+          if (blocked){ body.detail = blocked; done(409, body); return; }
+          if (want && !confirmed){ body.detail = 'Turning this on needs a confirm. Nothing was changed.'; done(400, body); return; }
+          if (want && seed.refuse){ body.detail = seed.refuse; done(409, body); return; }
+          on = want;
+          done(200, view());
+        }, LATENCY);
+      },
+      cancel: function(){ clearTimeout(timer); timer = 0; }
+    };
+  }
+
+  function el(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function wire(item, index){
+    var sw = item.querySelector('.gsw-switch');
+    var label = item.querySelector('.gsw-label');
+    var sub = item.querySelector('.gsw-sub');
+    var reason = item.querySelector('.gsw-reason');
+    var reasonText = item.querySelector('.gsw-reason-text');
+    var status = item.querySelector('.gsw-status');
+    var confirmBox = item.querySelector('.gsw-confirm');
+    var confirmText = item.querySelector('.gsw-confirm-text');
+    var yes = item.querySelector('.gsw-yes');
+    var no = item.querySelector('.gsw-no');
+    if (!sw || !label || !sub || !reason || !reasonText || !status || !confirmBox || !confirmText || !yes || !no) return;
+
+    var key = uid + '-' + index;
+    label.id = 'gsw-label-' + key;
+    sub.id = 'gsw-sub-' + key;
+    reason.id = 'gsw-reason-' + key;
+    confirmText.id = 'gsw-confirm-' + key;
+    sw.setAttribute('aria-labelledby', label.id);
+    confirmBox.setAttribute('aria-labelledby', confirmText.id);
+
+    var server = makeServer(SEEDS[item.getAttribute('data-gsw')] || {});
+    servers.push(server);
+    var busy = false;
+    var current = server.read();
+
+    // The switch is only ever drawn from a server view, never from a click.
+    function render(view){
+      current = view;
+      var blocked = !!view.blocked;
+      sw.setAttribute('aria-checked', view.on ? 'true' : 'false');
+      reason.hidden = !blocked;
+      reasonText.textContent = blocked ? view.blocked : '';
+      sw.setAttribute('aria-describedby', blocked ? sub.id + ' ' + reason.id : sub.id);
+      if (blocked){
+        sw.setAttribute('aria-disabled', 'true');
+        sw.setAttribute('tabindex', '-1');
+      } else {
+        sw.removeAttribute('tabindex');
+        if (!busy) sw.removeAttribute('aria-disabled');
+      }
+    }
+    function setBusy(on){
+      busy = on;
+      if (on){
+        sw.setAttribute('aria-busy', 'true');
+        sw.setAttribute('aria-disabled', 'true');
+      } else {
+        sw.removeAttribute('aria-busy');
+        if (!current.blocked) sw.removeAttribute('aria-disabled');
+      }
+    }
+    // One line under the row, in a polite live region. Words and an icon, so colour is never the only signal.
+    function say(kind, text){
+      status.textContent = '';
+      if (!text){ status.removeAttribute('data-kind'); return; }
+      status.setAttribute('data-kind', kind);
+      var ico = el('span', 'gsw-status-ico');
+      ico.setAttribute('aria-hidden', 'true');
+      ico.innerHTML = ICONS[kind === 'busy' ? 'clock' : (kind === 'ok' ? 'check' : 'alert')];
+      status.appendChild(ico);
+      status.appendChild(el('span', 'gsw-status-text', text));
+    }
+    function send(want, confirmed){
+      setBusy(true);
+      say('busy', 'Saving');
+      server.write(want, confirmed, function(code, body){
+        if (!connected()) return;
+        setBusy(false);
+        render(body);
+        if (code === 200 && body.on === want){
+          say('ok', want ? 'Cloud fallback is on for this chat.' : 'Cloud fallback is off for this chat.');
+        } else {
+          say('error', typeof body.detail === 'string' && body.detail ? body.detail : 'Could not change cloud fallback. Nothing was changed.');
+        }
+      });
+    }
+    function openConfirm(){
+      say('', '');
+      confirmBox.hidden = false;
+      confirmText.focus();
+    }
+    function closeConfirm(returnFocus){
+      if (confirmBox.hidden) return;
+      confirmBox.hidden = true;
+      if (returnFocus) sw.focus();
+    }
+
+    sw.addEventListener('click', function(){
+      if (busy || current.blocked) return;
+      if (!confirmBox.hidden){ confirmText.focus(); return; }
+      if (current.on) send(false, false);
+      else openConfirm();
+    });
+    yes.addEventListener('click', function(){
+      closeConfirm(true);
+      send(true, true);
+    });
+    no.addEventListener('click', function(){ closeConfirm(true); });
+    item.addEventListener('keydown', function(event){
+      if (event.key === 'Escape' && !confirmBox.hidden){
+        event.preventDefault();
+        closeConfirm(true);
+      }
+    });
+
+    render(current);
+  }
+  Array.prototype.forEach.call(items, wire);
 })();
 </script>
 </template>
