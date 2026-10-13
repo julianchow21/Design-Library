@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.15 (12 Oct)</span>
+  <span class="ver">v1.16 (13 Oct)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -1822,209 +1822,1109 @@ button{font-family:inherit}
 </template>
 
 
-<template class="pattern" data-title="Command Bar" data-category="Components" data-source="Kujira Collectibles v3.31 (app.js, openCmdBar)" data-note="Ctrl or Cmd+K opens a full-screen palette: type to filter grouped mock commands, arrow keys move the highlight, Enter runs the highlighted one, Escape or a backdrop click dismiss. The live preview pane always reflects whichever command is highlighted. This is the shell only, the source app's add/sell domain logic (parsing a quick-entry line, building a multi-item sale cart) is dropped entirely.">
+<template class="pattern" data-title="Command Bar" data-category="Components" data-source="Odysseus command palette v1.0.53 (78818460), static/js/paletteModel.js, static/js/commandPalette.js, static/style.css" data-note="Command palette in a frame that stands in for the app. Press Ctrl or Cmd K while the pointer or focus is in the gallery, or use the launcher. A dialog opens (role dialog, aria-modal, labelled, 640px at most). The field is a combobox and focus never leaves it. The rows are options in one listbox and aria-activedescendant names the active one. Up and Down stop at the ends. Hover sets the active row and Enter runs it. Escape closes and focus goes back to whatever opened it. Tab stays inside. The tabs All, Recent, Actions and Projects take the arrow keys, Home and End. On All the first row is always Ask Odysseus with the query, so an empty search still goes somewhere. It puts the text in the composer and sends nothing. Recent, Actions and Projects follow. A leading slash brings Commands right after Ask. Matching ranks a prefix first, then a word start, then anywhere inside. Highlights are built from match ranges and written with textContent, never as markup from data. A row shows a key hint only where it has a binding, and the active row shows the Enter glyph instead. A small formatter turns ctrl+alt+n into the Option and Command glyphs on a Mac and Ctrl Alt N elsewhere, in Mac modifier order. Recent and Projects are two fake async sources. Each keeps its own timers and a generation and token guard, so a stale answer never lands. Each group says loading, error or empty in words with an icon, and the icon stays still under reduced motion. An error is a row, and Enter retries it. Projects say Open in words or Local only with a lock, so colour is never the only signal. The strip over the frame switches the sources between normal, slow, failing and empty, and the frame between wide and phone. A pick shows Opening and the name in the footer, then the result line under the launcher says what would happen. Nothing navigates. The stage is a size container, so under 600px wide (a container query, since a card cannot change the viewport) the dialog becomes a full width sheet from the top. Key caps and the legend hide, a close button appears and the tabs reach 44px. The entry is a fade from 98% scale in the house duration, and reduced motion removes it. Every listener, observer and timer belongs to its instance and stops when the card leaves the DOM. The strips, the stand-in page and the fake answers are demo only. Synthetic copy throughout.">
 <style>
-.cbr-launch{padding:9px 16px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--bg4);color:var(--text);cursor:pointer;font-size:12.5px;font-weight:500;font-family:inherit;transition:background var(--dur) ease-out}
-.cbr-launch:hover{background:var(--bg3)}
-.cbr-status{margin:10px 0 0;font-size:11.5px;color:var(--text3);text-align:center}
-.cbr-dialog{margin:auto;padding:0;border:1px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text);width:min(420px,92vw);box-shadow:var(--shadow-2)}
-.cbr-dialog::backdrop{background:rgba(0,0,0,.55)}
-.cbr-box{display:flex;flex-direction:column;max-height:70vh}
-.cbr-input-row{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
-.cbr-input-icon{color:var(--text3);font-size:13px;flex-shrink:0}
-.cbr-input{flex:1;border:none;background:none;outline:none;color:var(--text);font-family:inherit;font-size:14px;min-width:0}
-.cbr-input::placeholder{color:var(--text3)}
-.cbr-close{border:none;background:none;color:var(--text2);cursor:pointer;font-size:14px;flex-shrink:0;padding:2px;line-height:1}
-.cbr-close:hover{color:var(--text)}
-.cbr-body{display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.cbr-results{overflow-y:auto;padding:6px;max-height:260px}
-.cbr-group-label{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--text3);font-weight:600;padding:8px 8px 4px}
-.cbr-result{display:flex;align-items:center;gap:10px;padding:8px;border-radius:var(--radius);cursor:pointer}
-.cbr-result.active{background:var(--accent-soft)}
-.cbr-result-icon{width:26px;height:26px;border-radius:7px;background:var(--bg4);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px}
-.cbr-result-main{display:flex;flex-direction:column;gap:1px;min-width:0}
-.cbr-result-title{font-size:12.5px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cbr-result-sub{font-size:11px;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cbr-empty{padding:20px;text-align:center;color:var(--text2);font-size:12px}
-.cbr-preview{border-top:1px solid var(--border);padding:12px 14px;background:var(--bg3);flex-shrink:0}
-.cbr-preview-icon{width:28px;height:28px;border-radius:8px;background:var(--bg4);display:flex;align-items:center;justify-content:center;font-size:13px;margin-bottom:6px}
-.cbr-preview-title{font-size:12.5px;font-weight:640;color:var(--text);overflow-wrap:anywhere}
-.cbr-preview-sub{font-size:11px;color:var(--text3);margin-top:2px;overflow-wrap:anywhere}
-.cbr-preview-run{font-size:10.5px;color:var(--text3);margin-top:8px}
-.cbr-hint{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--border);font-size:10.5px;color:var(--text3);flex-shrink:0}
-.cbr-hint kbd,.cbr-preview-run kbd{font-size:10px;padding:1px 5px;border-radius:4px;background:var(--bg4);border:1px solid var(--border2);color:var(--text2)}
+/* Command Bar, class prefix cbr-. Tokens only. Icons are plain strokes at the Icon System tiers, 16 for the field, tiles and buttons, 14 for status lines and the row lock, 12 for the footer lock. */
+/* Gallery only: give this card the full row so the frame shows at a real width. Delete this one rule when you copy the pattern. */
+.card:has(.cbr-wrap){grid-column:1/-1}
+.cbr-wrap{width:100%;max-width:760px;min-width:0;display:flex;flex-direction:column;gap:12px;text-align:left}
+.cbr-wrap [hidden]{display:none!important}
+.cbr-ico{display:block;flex:none}
+.cbr-i{display:inline-flex;flex:none;align-items:center}
+.cbr-sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Demo only: the sources strip and the width strip. Delete these rules and the strips when you copy the pattern, the frame then fills its column. */
+.cbr-demo{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cbr-demo-label{flex:none;margin-right:4px;font-size:11px;font-weight:640;letter-spacing:.4px;text-transform:uppercase;color:var(--text2)}
+.cbr-demo-btn{box-sizing:border-box;height:28px;margin:0;padding:0 10px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text2);font:inherit;font-size:12px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cbr-demo-btn:hover{background:var(--bg4);color:var(--text)}
+.cbr-demo-btn[aria-pressed="true"]{background:var(--bg4);box-shadow:inset 0 0 0 1px var(--text3);color:var(--text);font-weight:600}
+.cbr-demo-btn:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.cbr-wrap[data-width="phone"] .cbr-stage{width:375px}
+/* The stage is the size container, so the layout follows its width and not the window's. It has no border, so its width is the frame's whole width. */
+.cbr-stage{width:100%;max-width:100%;min-width:0;container-name:cbr;container-type:inline-size}
+/* The frame stands in for the app. */
+.cbr-frame{--cbr-top:40px;position:relative;box-sizing:border-box;width:100%;height:560px;border:1px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg2);color:var(--text);font-size:13px;line-height:1.4;overflow:hidden}
+.cbr-page{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;gap:12px;padding:16px;overflow:hidden}
+.cbr-bar{display:flex;align-items:center;gap:8px}
+.cbr-launch{display:inline-flex;flex:0 1 auto;align-items:center;gap:10px;box-sizing:border-box;min-width:0;height:36px;margin:0;padding:0 8px 0 12px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg3);color:var(--text2);font:inherit;font-size:13px;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cbr-launch:hover{background:var(--bg4);color:var(--text)}
+.cbr-launch:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+.cbr-launch-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbr-result{min-height:20px;margin:0;font-size:12px;line-height:1.5;color:var(--text2);overflow-wrap:anywhere}
+.cbr-ghosts{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.cbr-ghost{display:block;border:1px solid var(--border);border-radius:var(--radius);background:var(--bg3)}
+.cbr-ghost-bar{height:36px}
+.cbr-ghost-card{height:112px}
+.cbr-ghost-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.cbr-ghost-row .cbr-ghost{height:96px}
+/* The scrim and the dialog. The dialog is 640px at most and sits near the top of the frame. */
+.cbr-overlay{position:absolute;z-index:5;top:0;right:0;bottom:0;left:0;box-sizing:border-box;display:flex;align-items:flex-start;justify-content:center;padding:var(--cbr-top) 16px 16px;background:color-mix(in srgb,var(--bg) 62%,transparent)}
+.cbr-dialog{box-sizing:border-box;display:flex;flex-direction:column;width:100%;max-width:640px;min-width:0;min-height:0;max-height:100%;overflow:hidden;border:1px solid var(--border2);border-radius:var(--radius-lg);background:var(--bg2);box-shadow:var(--shadow-2);color:var(--text)}
+/* The field. The focus mark is an accent line under it, since the field holds focus the whole time the dialog is open. */
+.cbr-field{display:flex;flex:none;align-items:center;gap:12px;box-sizing:border-box;height:56px;padding:0 16px;border-bottom:1px solid var(--border)}
+.cbr-field:focus-within{border-bottom-color:var(--accent2);box-shadow:0 1px 0 var(--accent2)}
+.cbr-field-ico{color:var(--text2)}
+.cbr-input{flex:1 1 auto;min-width:0;height:100%;margin:0;padding:0;border:0;border-radius:0;background:transparent;color:var(--text);font:inherit;font-size:16px;outline:none}
+.cbr-input::placeholder{color:var(--text3);opacity:1}
+.cbr-kbd{display:inline-block;flex:none;box-sizing:border-box;min-width:20px;padding:1px 5px;border:1px solid var(--border2);border-radius:calc(var(--radius) - 5px);background:var(--bg3);color:var(--text2);font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:16px;text-align:center;-webkit-user-select:none;user-select:none}
+.cbr-close{display:none;flex:none;place-items:center;width:44px;height:44px;margin:0 -12px 0 0;padding:0;border:0;border-radius:var(--radius);background:transparent;color:var(--text2);cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cbr-close:hover{background:var(--bg4);color:var(--text)}
+/* The filter tabs. The selected tab has a fill and an edge, the others are quiet. */
+.cbr-tabs{display:flex;flex:none;gap:4px;padding:8px 12px;border-bottom:1px solid var(--border)}
+.cbr-tab{box-sizing:border-box;height:28px;margin:0;padding:0 10px;border:0;border-radius:calc(var(--radius) - 3px);background:transparent;color:var(--text2);font:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:background var(--dur) ease-out,color var(--dur) ease-out}
+.cbr-tab:hover{background:var(--bg3);color:var(--text)}
+.cbr-tab[aria-selected="true"]{background:var(--bg4);box-shadow:inset 0 0 0 1px var(--border2);color:var(--text)}
+.cbr-tab:focus-visible,.cbr-close:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
+/* The list. Rows are 44px. The label gives way first, and the sub line is cut on its own at half the row. */
+.cbr-body{position:relative;flex:1 1 auto;min-height:0;padding:6px;overflow-y:auto;overscroll-behavior:contain}
+.cbr-group-title{padding:10px 10px 4px;font-size:12px;font-weight:500;color:var(--text2)}
+.cbr-row{display:flex;align-items:center;gap:12px;box-sizing:border-box;min-width:0;height:44px;padding:0 10px;border-radius:var(--radius);color:var(--text);cursor:pointer;transition:background var(--dur) ease-out}
+.cbr-row[aria-selected="true"]{background:var(--bg4)}
+.cbr-tile{display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:calc(var(--radius) - 2px);background:color-mix(in srgb,var(--text) 7%,transparent);color:var(--text2)}
+.cbr-row[aria-selected="true"] .cbr-tile{background:color-mix(in srgb,var(--text) 12%,transparent);color:var(--text)}
+.cbr-row[data-kind="ask"] .cbr-tile{background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 35%,transparent);color:var(--accent2)}
+.cbr-row[data-kind="retry"] .cbr-tile{background:transparent;color:var(--red)}
+.cbr-text{display:flex;flex:1 1 auto;align-items:baseline;gap:10px;min-width:0}
+.cbr-label{flex:0 1 auto;min-width:3ch;overflow:hidden;font-size:14px;color:var(--text);text-overflow:ellipsis;white-space:nowrap}
+.cbr-sub{flex:0 0 auto;min-width:0;max-width:50%;overflow:hidden;font-size:12px;color:var(--text3);text-overflow:ellipsis;white-space:nowrap}
+.cbr-row[aria-selected="true"] .cbr-sub{color:var(--text2)}
+.cbr-row[data-kind="retry"] .cbr-sub{flex:none;max-width:none;color:var(--text);font-weight:500}
+.cbr-row[data-busy]{cursor:default}
+.cbr-row[data-busy] .cbr-tile{color:var(--text3)}
+.cbr-row[data-busy] .cbr-label{color:var(--text2)}
+.cbr-mark{background:transparent;color:var(--accent2);font-weight:600}
+.cbr-lock{display:inline-flex;flex:none;color:var(--text2)}
+.cbr-enter{display:none;flex:none;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--text2)}
+.cbr-row[aria-selected="true"] .cbr-enter{display:inline}
+.cbr-row[aria-selected="true"] .cbr-hint{display:none}
+.cbr-row[data-busy] .cbr-enter{display:none}
+/* Loading and empty lines for a group. Words and an icon, the icon pulses only where motion is welcome. */
+.cbr-status{display:flex;align-items:center;gap:12px;box-sizing:border-box;min-height:44px;padding:0 10px;font-size:13px;color:var(--text2)}
+.cbr-status .cbr-i{justify-content:center;width:28px;color:var(--text3)}
+.cbr-status-text{min-width:0;overflow-wrap:anywhere}
+@keyframes cbr-pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.cbr-empty{display:flex;flex-direction:column;align-items:center;gap:6px;padding:36px 16px;text-align:center}
+.cbr-empty-title{font-size:14px;color:var(--text)}
+.cbr-empty-body{font-size:13px;color:var(--text2);overflow-wrap:anywhere}
+/* The footer. The legend on the left becomes Opening and a name after a pick. */
+.cbr-foot{display:flex;flex:none;align-items:center;gap:16px;box-sizing:border-box;min-height:40px;padding:0 14px;border-top:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:12px}
+.cbr-legend{display:flex;align-items:center;gap:16px}
+.cbr-legend-item{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.cbr-opening{display:inline-flex;align-items:center;gap:8px;min-width:0;color:var(--text)}
+.cbr-opening-dot{flex:none;width:6px;height:6px;border-radius:999px;background:var(--accent2)}
+.cbr-opening-text{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cbr-local{display:inline-flex;flex:none;align-items:center;gap:6px;margin-left:auto;white-space:nowrap}
+.cbr-local .cbr-i{color:var(--green)}
+/* The entry is a fade from 98% scale in the house duration, and only where the person has not asked for less motion. */
+@keyframes cbr-scrim-in{from{opacity:0}to{opacity:1}}
+@keyframes cbr-dialog-in{from{opacity:0;transform:scale(.98)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:no-preference){
+  .cbr-overlay:not([hidden]){animation:cbr-scrim-in var(--dur) ease-out both}
+  .cbr-overlay:not([hidden]) .cbr-dialog{transform-origin:50% 0;animation:cbr-dialog-in var(--dur) ease-out both}
+  .cbr-status[data-kind="loading"] .cbr-i,.cbr-row[data-busy] .cbr-tile{animation:cbr-pulse calc(var(--dur) * 8) ease-in-out infinite}
+}
+/* Under 600px wide, measured on the stage and not the window: a full width sheet from the top, 44px targets, no key caps and no legend, and a close button. */
+@container cbr (width < 600px){
+  .cbr-overlay{padding:0 0 48px}
+  .cbr-dialog{max-width:none;border-width:0 0 1px;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+  .cbr-esc,.cbr-hint,.cbr-legend{display:none}
+  .cbr-close{display:inline-grid}
+  .cbr-tab{height:44px;padding:0 14px}
+  .cbr-launch{height:44px}
+}
+@container cbr (width < 480px){
+  .cbr-input::placeholder{font-size:12px}
+}
+/* Touch sizes. Phones and tablets get 44px targets. */
+@media (pointer:coarse){
+  .cbr-tab{height:44px;padding:0 14px}
+  .cbr-launch{height:44px}
+}
+@media (max-width:600px),(pointer:coarse){
+  .cbr-demo-btn{min-height:44px}
+}
+@media (prefers-reduced-motion:reduce){
+  .cbr-demo-btn,.cbr-launch,.cbr-tab,.cbr-close,.cbr-row{transition:none}
+}
+/* Forced colours drop backgrounds, so the selected row and tab get an edge in system colours. System colours appear only here. */
+@media (forced-colors:active){
+  .cbr-row[aria-selected="true"],.cbr-tab[aria-selected="true"]{outline:2px solid Highlight;outline-offset:-2px}
+}
 </style>
-<button type="button" class="cbr-launch">Open (or press Ctrl/Cmd+K)</button>
-<p class="cbr-status" aria-live="polite">Last run: none yet</p>
-<dialog class="cbr-dialog" aria-label="Command bar">
-  <div class="cbr-box">
-    <div class="cbr-input-row">
-      <span class="cbr-input-icon" aria-hidden="true">&#8984;</span>
-      <input type="text" class="cbr-input" placeholder="Type a command..." autocomplete="off" aria-label="Search commands">
-      <button type="button" class="cbr-close" aria-label="Close">&#10005;</button>
-    </div>
-    <div class="cbr-body">
-      <div class="cbr-results" role="listbox" aria-label="Commands"></div>
-      <div class="cbr-preview"></div>
-    </div>
-    <div class="cbr-hint"><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> navigate</span><span><kbd>&crarr;</kbd> run</span><span><kbd>esc</kbd> close</span></div>
+<div class="cbr-wrap" data-width="wide">
+  <!-- Demo only: the sources strip and the width strip. Delete both when you copy the pattern. -->
+  <div class="cbr-demo" role="group" aria-label="Demo sources">
+    <span class="cbr-demo-label">Sources</span>
+    <button type="button" class="cbr-demo-btn" data-cbr-mode="normal" aria-pressed="true">Normal</button>
+    <button type="button" class="cbr-demo-btn" data-cbr-mode="slow" aria-pressed="false">Slow</button>
+    <button type="button" class="cbr-demo-btn" data-cbr-mode="failing" aria-pressed="false">Failing</button>
+    <button type="button" class="cbr-demo-btn" data-cbr-mode="empty" aria-pressed="false">Empty</button>
   </div>
-</dialog>
+  <div class="cbr-demo" role="group" aria-label="Demo frame width">
+    <span class="cbr-demo-label">Width</span>
+    <button type="button" class="cbr-demo-btn" data-cbr-width="wide" aria-pressed="true">Wide</button>
+    <button type="button" class="cbr-demo-btn" data-cbr-width="phone" aria-pressed="false">Phone</button>
+  </div>
+  <div class="cbr-stage">
+  <div class="cbr-frame" role="group" aria-label="Sample app with a command bar">
+    <!-- Demo only: the stand-in page behind the dialog. The launcher and the result line are the parts a real app keeps. -->
+    <div class="cbr-page">
+      <div class="cbr-bar">
+        <button type="button" class="cbr-launch" aria-haspopup="dialog" aria-keyshortcuts="Control+K Meta+K">
+          <svg class="cbr-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg>
+          <span class="cbr-launch-text">Search or ask</span>
+          <kbd class="cbr-kbd cbr-launch-key" aria-hidden="true">Ctrl K</kbd>
+        </button>
+      </div>
+      <p class="cbr-result" role="status">Nothing picked yet.</p>
+      <div class="cbr-ghosts" aria-hidden="true">
+        <span class="cbr-ghost cbr-ghost-bar"></span>
+        <span class="cbr-ghost cbr-ghost-card"></span>
+        <span class="cbr-ghost-row"><span class="cbr-ghost"></span><span class="cbr-ghost"></span><span class="cbr-ghost"></span></span>
+      </div>
+    </div>
+    <div class="cbr-overlay" hidden>
+      <div class="cbr-dialog" role="dialog" aria-modal="true">
+        <span class="cbr-sr cbr-title">Command palette</span>
+        <div class="cbr-field">
+          <span class="cbr-i cbr-field-ico" aria-hidden="true"><svg class="cbr-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></span>
+          <input type="text" class="cbr-input" role="combobox" aria-label="Search or command" aria-autocomplete="list" aria-expanded="false" placeholder="Search everything, run a command, or ask&hellip;" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+          <kbd class="cbr-kbd cbr-esc" aria-hidden="true">esc</kbd>
+          <button type="button" class="cbr-close" aria-label="Close"><svg class="cbr-ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6.5 6.5 11 11"/><path d="m17.5 6.5-11 11"/></svg></button>
+        </div>
+        <div class="cbr-tabs" role="tablist" aria-label="Filter results">
+          <button type="button" class="cbr-tab" role="tab" data-tab="all" aria-selected="true" tabindex="0">All</button>
+          <button type="button" class="cbr-tab" role="tab" data-tab="recent" aria-selected="false" tabindex="-1">Recent</button>
+          <button type="button" class="cbr-tab" role="tab" data-tab="actions" aria-selected="false" tabindex="-1">Actions</button>
+          <button type="button" class="cbr-tab" role="tab" data-tab="projects" aria-selected="false" tabindex="-1">Projects</button>
+        </div>
+        <div class="cbr-body">
+          <div class="cbr-list" role="listbox" aria-label="Results"></div>
+          <div class="cbr-empty" hidden>
+            <span class="cbr-empty-title">Nothing in this filter</span>
+            <span class="cbr-empty-body">Switch to All and press &crarr; to ask Odysseus instead.</span>
+          </div>
+        </div>
+        <div class="cbr-foot">
+          <span class="cbr-legend"><span class="cbr-legend-item"><kbd class="cbr-kbd">&uarr;</kbd><kbd class="cbr-kbd">&darr;</kbd> move</span><span class="cbr-legend-item"><kbd class="cbr-kbd">&crarr;</kbd> open</span><span class="cbr-legend-item"><kbd class="cbr-kbd">esc</kbd> close</span></span>
+          <span class="cbr-opening" role="status" hidden><span class="cbr-opening-dot" aria-hidden="true"></span><span class="cbr-opening-text"></span></span>
+          <span class="cbr-local"><span class="cbr-i" aria-hidden="true"><svg class="cbr-ico" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></svg></span>Searched on this machine</span>
+        </div>
+        <div class="cbr-sr cbr-live" role="status" aria-live="polite"></div>
+      </div>
+    </div>
+  </div>
+  </div>
+</div>
 <script>
 (function(){
-  // Finds its own elements relative to itself, never a global id, so several
-  // instances (or repeated re-renders from the filter cycle) never collide.
+  'use strict';
+  // The pattern is the dialog, its keys, its ranking and its two sources. The strips, the stand-in page and the fake answers are demo only.
+  // Every document listener, observer and timer belongs to this instance and stops the moment the card leaves the DOM, so cycling the filters never stacks them.
+  // Colour comes from CSS variables only, so the theme toggle recolours the card live.
   var script = document.currentScript;
-  var root = script.parentElement;
-  var launchBtn = root.querySelector('.cbr-launch');
-  var statusEl = root.querySelector('.cbr-status');
-  var dialog = root.querySelector('.cbr-dialog');
-  var input = root.querySelector('.cbr-input');
-  var closeBtn = root.querySelector('.cbr-close');
-  var resultsEl = root.querySelector('.cbr-results');
-  var previewEl = root.querySelector('.cbr-preview');
-  if (!launchBtn || !dialog || !input || !resultsEl || !previewEl) return;
+  var root = script && script.parentElement;
+  if (!root) return;
+  var wrap = script.previousElementSibling;
+  if (!wrap || !wrap.classList.contains('cbr-wrap')) wrap = root.querySelector('.cbr-wrap');
+  if (!wrap || wrap.getAttribute('data-cbr-ready')) return;
+  function find(selector){ return wrap.querySelector(selector); }
+  var frame = find('.cbr-frame');
+  var page = find('.cbr-page');
+  var launch = find('.cbr-launch');
+  var launchKey = find('.cbr-launch-key');
+  var resultEl = find('.cbr-result');
+  var overlay = find('.cbr-overlay');
+  var dialog = find('.cbr-dialog');
+  var titleEl = find('.cbr-title');
+  var input = find('.cbr-input');
+  var closeBtn = find('.cbr-close');
+  var tablist = find('.cbr-tabs');
+  var bodyEl = find('.cbr-body');
+  var listEl = find('.cbr-list');
+  var emptyEl = find('.cbr-empty');
+  var legendEl = find('.cbr-legend');
+  var openingEl = find('.cbr-opening');
+  var openingTextEl = find('.cbr-opening-text');
+  var liveEl = find('.cbr-live');
+  var tabEls = wrap.querySelectorAll('.cbr-tab');
+  var modeBtns = wrap.querySelectorAll('[data-cbr-mode]');
+  var widthBtns = wrap.querySelectorAll('[data-cbr-width]');
+  if (!frame || !page || !launch || !launchKey || !resultEl || !overlay || !dialog || !titleEl || !input || !closeBtn || !tablist || !bodyEl || !listEl || !emptyEl || !legendEl || !openingEl || !openingTextEl || !liveEl || !tabEls.length) return;
+  wrap.setAttribute('data-cbr-ready', '1');
 
-  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  // A fresh id per instance, so two live copies never share an aria-controls, aria-labelledby or aria-activedescendant target.
+  var uid = Math.random().toString(36).slice(2, 8);
+  dialog.id = 'cbr-dialog-' + uid;
+  titleEl.id = 'cbr-title-' + uid;
+  listEl.id = 'cbr-list-' + uid;
+  dialog.setAttribute('aria-labelledby', titleEl.id);
+  launch.setAttribute('aria-controls', dialog.id);
+  input.setAttribute('aria-controls', listEl.id);
+  Array.prototype.forEach.call(tabEls, function(tabEl){ tabEl.setAttribute('aria-controls', listEl.id); });
 
-  // Generic mock commands, grouped. No app-specific (add/sell) domain logic
-  // lives here, that stays in the source app, this is the palette shell only.
-  var GROUPS = [
-    { name: 'Navigate', items: [
-      { title: 'Go to Dashboard', sub: 'Overview of activity and key metrics', icon: '◱' },
-      { title: 'Go to Settings', sub: 'Account, billing and preferences', icon: '⚙' }
-    ]},
-    { name: 'Actions', items: [
-      { title: 'Create new project', sub: 'Start a blank project from scratch', icon: '+' },
-      { title: 'Invite a teammate', sub: 'Send an email invite with a role', icon: '◍' },
-      { title: 'Export data as CSV', sub: 'Download every row in the current view', icon: '⇩' }
-    ]},
-    { name: 'Recent', items: [
-      { title: 'Open "Quarterly Roadmap Review: Draft for Stakeholder Sign-off and Budget Approval"', sub: 'Document, edited 2 days ago', icon: '▤' },
-      { title: 'Open "Weekly Sync Notes"', sub: 'Document, edited yesterday', icon: '▤' }
-    ]}
-  ];
+  // ---- Words. Every sentence the palette writes itself.
+  var COPY = {
+    askEmpty: 'Ask Odysseus anything…',
+    askEmptySub: 'Go to the composer',
+    askSub: 'Puts it in the composer, nothing is sent',
+    open: 'Open',
+    local: 'Local only',
+    retry: 'Retry',
+    loadingRecent: 'Loading recent chats…',
+    loadingProjects: 'Loading projects…',
+    errorRecent: "Couldn't load recent chats",
+    errorProjects: "Couldn't load projects",
+    emptyRecent: 'No chats yet',
+    emptyProjects: 'No projects yet'
+  };
+  var TABS = ['all', 'recent', 'actions', 'projects'];
+  var LIMITS = { recentAll: 5, recentTab: 10, projectsIdle: 4, projectsTyped: 5, projectsTab: 20, commands: 6, commandsSlash: 12, ask: 120, sub: 90 };
+  var PICK_MS = 450;
 
-  var flat = [];
-  var activeIdx = 0;
+  // ---- Icons. Constants, never built from data. Plain strokes at the Icon System tiers.
+  var ATTRS = 'class="cbr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+  var PATHS = {
+    spark: '<path d="M12 3.8l1.9 6.3 6.3 1.9-6.3 1.9L12 20.2l-1.9-6.3-6.3-1.9 6.3-1.9z"/>',
+    plus: '<path d="M12 5.5v13"/><path d="M5.5 12h13"/>',
+    send: '<path d="M20.5 3.5 10 14"/><path d="M20.5 3.5 14.2 20.5l-3.4-6.9L3.9 10.2z"/>',
+    compass: '<circle cx="12" cy="12" r="8.5"/><path d="m15.4 8.6-1.8 4.9-4.9 1.8 1.8-4.9z"/>',
+    note: '<path d="M7 3.5h7l4.5 4.5v11A1.5 1.5 0 0 1 17 20.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z"/><path d="M14 3.5V8h4.5"/><path d="M9 12.5h6M9 16h4"/>',
+    hidden: '<path d="M3.5 12s3.2-5.5 8.5-5.5S20.5 12 20.5 12s-3.2 5.5-8.5 5.5S3.5 12 3.5 12z"/><circle cx="12" cy="12" r="2.4"/><path d="m5 5 14 14"/>',
+    users: '<circle cx="9" cy="8.5" r="3"/><path d="M3.5 19c0-3.1 2.4-5 5.5-5s5.5 1.9 5.5 5"/><path d="M15.5 5.7a3 3 0 0 1 0 5.6"/><path d="M17.5 14.3c1.9.6 3 2.2 3 4.7"/>',
+    user: '<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20c0-3.9 3.1-6.5 7-6.5s7 2.6 7 6.5"/>',
+    chat: '<path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5h-8L7 20v-3.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.5.7L11.4 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    terminal: '<path d="m5 8 4.5 4L5 16"/><path d="M12.5 16.5H19"/>',
+    lock: '<rect x="5" y="10.5" width="14" height="9.5" rx="2.2" fill="currentColor"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/>',
+    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 7.5V13"/><path d="M12 16.4v.1"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5"/><path d="M12 7.7v.1"/>',
+    ring: '<path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5"/>'
+  };
+  function svg(name, size){
+    return '<svg ' + ATTRS + ' width="' + size + '" height="' + size + '">' + (PATHS[name] || PATHS.info) + '</svg>';
+  }
 
-  // Token-aware filter across title+sub, same idea as the source's
-  // whitespace-tokenised inventory search: every token must match somewhere.
-  function renderResults(){
-    var q = input.value.trim();
-    var tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
-    flat = [];
-    var html = '';
-    GROUPS.forEach(function(g){
-      var matches = g.items.filter(function(c){
-        if (!tokens.length) return true;
-        var hay = (c.title + ' ' + c.sub).toLowerCase();
-        return tokens.every(function(t){ return hay.indexOf(t) !== -1; });
-      });
-      if (!matches.length) return;
-      html += '<div class="cbr-group-label">' + esc(g.name) + '</div>';
-      matches.forEach(function(c){
-        var idx = flat.length;
-        flat.push(c);
-        html += '<div class="cbr-result" data-idx="' + idx + '" role="option">' +
-          '<span class="cbr-result-icon" aria-hidden="true">' + esc(c.icon) + '</span>' +
-          '<span class="cbr-result-main"><span class="cbr-result-title">' + esc(c.title) + '</span>' +
-          '<span class="cbr-result-sub">' + esc(c.sub) + '</span></span></div>';
-      });
+  // ---- Text helpers. Highlights are [start, end) ranges into the original string, written with textContent.
+  var ASCII = /^[\x00-\x7f]*$/;
+  function cleanText(value){
+    return typeof value === 'string' ? value.replace(/\s+/g, ' ').trim() : '';
+  }
+  function truncate(value, max){
+    var chars = Array.from(value);
+    return chars.length <= max ? value : chars.slice(0, Math.max(1, max - 1)).join('').replace(/\s+$/, '') + '…';
+  }
+  // Case folding that also covers the expansions lower-casing alone misses (Strasse and the sharp s). map says, for each folded unit, which characters of the original it came from.
+  function fold(value){
+    return ASCII.test(value) ? value.toLowerCase() : Array.from(value).map(function(ch){ return ch.toUpperCase().toLowerCase(); }).join('');
+  }
+  function foldMap(text){
+    if (ASCII.test(text)) return { folded: text.toLowerCase(), map: null };
+    var folded = '';
+    var map = [];
+    var start = 0;
+    Array.from(text).forEach(function(ch){
+      var end = start + ch.length;
+      var piece = ch.toUpperCase().toLowerCase();
+      folded += piece;
+      for (var i = 0; i < piece.length; i++) map.push([start, end]);
+      start = end;
     });
-    if (!flat.length){
-      resultsEl.innerHTML = '<div class="cbr-empty">No commands match "' + esc(q) + '"</div>';
-      previewEl.innerHTML = '';
+    return { folded: folded, map: map };
+  }
+  function isWordStart(folded, at){
+    if (at <= 0) return true;
+    var before = Array.from(folded.slice(Math.max(0, at - 2), at)).pop();
+    return !/[\p{L}\p{N}]/u.test(before || '');
+  }
+  function mergeRanges(ranges){
+    var sorted = ranges.filter(function(r){ return r[1] > r[0]; }).sort(function(a, b){ return a[0] - b[0] || a[1] - b[1]; });
+    var merged = [];
+    sorted.forEach(function(r){
+      var last = merged[merged.length - 1];
+      if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+      else merged.push([r[0], r[1]]);
+    });
+    return merged;
+  }
+  function occurrences(folded, map, needle){
+    var found = [];
+    var from = 0;
+    var at;
+    while (needle && (at = folded.indexOf(needle, from)) >= 0){
+      var first = map ? map[at] : [at, at + 1];
+      var last = map ? map[at + needle.length - 1] : [at + needle.length - 1, at + needle.length];
+      if (first && last) found.push([first[0], last[1]]);
+      from = at + Math.max(1, needle.length);
+    }
+    return found;
+  }
+  // How well a text answers a query, and where to highlight it. Best first: the query starts the text, it starts a word, it is inside a word, every word of it is somewhere.
+  // Within a tier an earlier match and a shorter text rank higher. Score 0 means no match.
+  function tierScore(tier, at, length){
+    return tier * 1000000 - Math.min(at, 999) * 100 - Math.min(length, 99);
+  }
+  function scoreText(text, query){
+    var none = { score: 0, ranges: [] };
+    var needle = fold(cleanText(query));
+    if (!needle) return none;
+    var fm = foldMap(typeof text === 'string' ? text : '');
+    if (!fm.folded) return none;
+    var at = fm.folded.indexOf(needle);
+    if (at >= 0){
+      var tier = at === 0 ? 4 : (isWordStart(fm.folded, at) ? 3 : 2);
+      return { score: tierScore(tier, at, fm.folded.length), ranges: mergeRanges(occurrences(fm.folded, fm.map, needle)) };
+    }
+    var words = needle.split(' ').filter(Boolean);
+    if (words.length < 2) return none;
+    var earliest = Infinity;
+    var ranges = [];
+    for (var i = 0; i < words.length; i++){
+      var where = fm.folded.indexOf(words[i]);
+      if (where < 0) return none;
+      earliest = Math.min(earliest, where);
+      ranges = ranges.concat(occurrences(fm.folded, fm.map, words[i]));
+    }
+    return { score: tierScore(1, earliest, fm.folded.length), ranges: mergeRanges(ranges) };
+  }
+  // Filter and order items. A match in a keyword ranks below any match in the label and has no highlight. With no query everything stays in the order the source gave.
+  function rank(items, query, label, keywords){
+    var out = [];
+    items.forEach(function(item, index){
+      if (!query){ out.push({ item: item, score: 0, ranges: [], index: index }); return; }
+      var hit = scoreText(label(item), query);
+      var score = hit.score;
+      var ranges = hit.ranges;
+      if (!score && keywords){
+        (keywords(item) || []).forEach(function(word){
+          var found = scoreText(word, query);
+          if (found.score) score = Math.max(score, 50000 + Math.floor(found.score / 1000));
+        });
+        ranges = [];
+      }
+      if (score > 0) out.push({ item: item, score: score, ranges: ranges, index: index });
+    });
+    if (query) out.sort(function(a, b){ return b.score - a.score || a.index - b.index; });
+    return out;
+  }
+  function appendLabel(parent, text, ranges){
+    var cursor = 0;
+    (ranges || []).forEach(function(r){
+      var start = Math.max(cursor, Math.min(text.length, r[0]));
+      var end = Math.max(start, Math.min(text.length, r[1]));
+      if (end <= start) return;
+      if (start > cursor) parent.appendChild(document.createTextNode(text.slice(cursor, start)));
+      var mark = document.createElement('mark');
+      mark.className = 'cbr-mark';
+      mark.textContent = text.slice(start, end);
+      parent.appendChild(mark);
+      cursor = end;
+    });
+    if (cursor < text.length) parent.appendChild(document.createTextNode(text.slice(cursor)));
+  }
+
+  // ---- Key hints. A binding is written ctrl+alt+n. ctrl means the app's main modifier, so a Mac shows Command for it.
+  // control is the Control key itself. A Mac reads them in the order Control, Option, Shift, Command, whatever order the binding was written in.
+  var IS_MAC = /mac|iphone|ipad|ipod/i.test((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent || '');
+  var MODS = { control: { mac: '⌃', pc: 'Ctrl', aria: 'Control' }, alt: { mac: '⌥', pc: 'Alt', aria: 'Alt' }, shift: { mac: '⇧', pc: 'Shift', aria: 'Shift' }, ctrl: { mac: '⌘', pc: 'Ctrl', aria: 'Meta' } };
+  var MAC_ORDER = ['control', 'alt', 'shift', 'ctrl'];
+  var PC_ORDER = ['control', 'ctrl', 'alt', 'shift'];
+  var KEY_WORDS = { enter: '↵', escape: 'Esc', space: 'Space', tab: 'Tab', backspace: '⌫', delete: 'Del', arrowup: '↑', arrowdown: '↓', arrowleft: '←', arrowright: '→' };
+  var ARIA_KEYS = { escape: 'Escape', enter: 'Enter', space: 'Space', tab: 'Tab', backspace: 'Backspace', delete: 'Delete', arrowup: 'ArrowUp', arrowdown: 'ArrowDown', arrowleft: 'ArrowLeft', arrowright: 'ArrowRight' };
+  function parseCombo(combo){
+    if (typeof combo !== 'string' || !combo.trim()) return null;
+    var parts = combo.trim().toLowerCase().split('+');
+    if (parts.some(function(part){ return !part; })) return null;
+    var key = parts.pop();
+    if (MODS[key]) return null;
+    var seen = {};
+    for (var i = 0; i < parts.length; i++){
+      if (!MODS[parts[i]] || seen[parts[i]]) return null;
+      seen[parts[i]] = true;
+    }
+    return { mods: seen, key: key };
+  }
+  function capital(key){
+    return key.length === 1 ? key.toUpperCase() : key.charAt(0).toUpperCase() + key.slice(1);
+  }
+  function formatBinding(combo, isMac){
+    var parsed = parseCombo(combo);
+    if (!parsed) return '';
+    var out = [];
+    (isMac ? MAC_ORDER : PC_ORDER).forEach(function(name){
+      if (!parsed.mods[name]) return;
+      var text = MODS[name][isMac ? 'mac' : 'pc'];
+      if (out.indexOf(text) < 0) out.push(text);
+    });
+    out.push(KEY_WORDS[parsed.key] || capital(parsed.key));
+    return out.join(isMac ? '' : ' ');
+  }
+  // The same binding in the aria-keyshortcuts form.
+  function ariaBinding(combo, isMac){
+    var parsed = parseCombo(combo);
+    if (!parsed) return '';
+    var out = [];
+    ['control', 'ctrl', 'alt', 'shift'].forEach(function(name){
+      if (!parsed.mods[name]) return;
+      var text = name === 'ctrl' ? (isMac ? 'Meta' : 'Control') : MODS[name].aria;
+      if (out.indexOf(text) < 0) out.push(text);
+    });
+    out.push(ARIA_KEYS[parsed.key] || capital(parsed.key));
+    return out.join('+');
+  }
+
+  // ---- Synthetic data. The sources send these after a pause, and each answer is checked before it is used.
+  var RECENT = [
+    { id: 'c1', name: 'Fix the sample retry loop', mode: 'Chat', folder: 'Synthetic Dispatch', age: '2h ago' },
+    { id: 'c2', name: 'Draft the weekly summary', mode: 'Chat', folder: '', age: 'Yesterday' },
+    { id: 'c3', name: 'Compare two sample vendors for the pilot', mode: 'Research', folder: 'Sample Ledger', age: 'Yesterday' },
+    { id: 'c4', name: 'Rename the sample export files', mode: 'Chat', folder: 'Demo Atlas', age: 'Monday' },
+    { id: 'c5', name: 'Plan the sample launch checklist', mode: 'Chat', folder: 'Synthetic Dispatch', age: 'Monday' },
+    { id: 'c6', name: 'An unusually long sample chat title that keeps going well past the edge of the row so the ellipsis has something to cut', mode: 'Chat', folder: 'Placeholder Studio', age: 'Last week' },
+    { id: 'c7', name: 'Review the sample budget notes', mode: 'Notes', folder: 'Sample Ledger', age: 'Last week' },
+    { id: 'c8', name: 'Retry policy questions', mode: 'Chat', folder: 'Synthetic Dispatch', age: '2 weeks ago' }
+  ];
+  var PROJECTS = [
+    { id: 'synthetic-dispatch', name: 'Synthetic Dispatch', local: false },
+    { id: 'sample-ledger', name: 'Sample Ledger', local: true },
+    { id: 'demo-atlas', name: 'Demo Atlas', local: false },
+    { id: 'placeholder-studio', name: 'Placeholder Studio', local: true },
+    { id: 'sample-field-notes', name: 'Sample Field Notes', local: false },
+    { id: 'mock-newsletter', name: 'Mock Newsletter', local: false },
+    { id: 'sample-travel-plans', name: 'Sample Travel Plans', local: true },
+    { id: 'sample-long-name', name: 'An unusually long sample project name that needs the ellipsis to fit the row', local: false }
+  ];
+  var ACTIONS = [
+    { id: 'new-chat', label: 'New chat', icon: 'plus', sub: 'Starts with an empty composer', binding: 'ctrl+alt+n', words: ['new', 'start', 'fresh', 'empty'] },
+    { id: 'dispatch', label: 'Dispatch a task…', icon: 'send', sub: 'Open the hand off panel', binding: '', words: ['hand off', 'handoff', 'delegate', 'crew'] },
+    { id: 'research', label: 'Start deep research…', icon: 'compass', sub: 'Open Deep Research', binding: '', words: ['research', 'brief', 'sources', 'cited'] },
+    { id: 'note', label: 'New note', icon: 'note', sub: 'Open Notes', binding: 'ctrl+shift+o', words: ['notes', 'todo', 'jot'] },
+    { id: 'nobody', label: 'Start a Nobody session', icon: 'hidden', sub: 'No memory, nothing saved', binding: 'ctrl+shift+n', words: ['incognito', 'private', 'no memory'] },
+    { id: 'group', label: 'Start a group chat', icon: 'users', sub: 'Opens the group setup', binding: '', words: ['group', 'several models', 'round robin'] },
+    { id: 'assistant', label: 'Open Assistant', icon: 'user', sub: 'Your pinned assistant chat', binding: '', words: ['assistant', 'pinned'] }
+  ];
+  var COMMANDS = [
+    { token: '/new', help: 'Start a new chat' },
+    { token: '/clear', help: 'Clear the messages in this chat' },
+    { token: '/rename', help: 'Rename this chat' },
+    { token: '/fork', help: 'Branch a new chat from the last message' },
+    { token: '/export', help: 'Save this chat as a file' },
+    { token: '/archive', help: 'Move this chat out of the list' },
+    { token: '/favorite', help: 'Pin this chat to the top' },
+    { token: '/web', help: 'Search the web for the next message' },
+    { token: '/research', help: 'Run deep research on the next message' },
+    { token: '/doc', help: 'Attach a document to the next message' },
+    { token: '/memories', help: 'Show what is remembered' },
+    { token: '/forget', help: 'Remove one memory' },
+    { token: '/model', help: 'Switch the model for this chat' },
+    { token: '/help', help: 'List every command with what it does, in one long line that the row cuts with an ellipsis' }
+  ];
+  // How long each fake answer takes and what it says, per demo setting. A real source is a request here.
+  var PLAN = {
+    normal: { recent: { ms: 380, say: 'ok' }, projects: { ms: 640, say: 'ok' } },
+    slow: { recent: { ms: 2200, say: 'ok' }, projects: { ms: 3600, say: 'ok' } },
+    failing: { recent: { ms: 420, say: 'fail' }, projects: { ms: 700, say: 'fail' } },
+    empty: { recent: { ms: 380, say: 'none' }, projects: { ms: 640, say: 'none' } }
+  };
+  // What a source sends is checked first. A payload that is not a list is an error, a row without an id or a name is dropped.
+  function parseRows(list){
+    if (!Array.isArray(list)) return null;
+    return list.filter(function(r){ return r && typeof r.id === 'string' && r.id && cleanText(r.name); })
+      .map(function(r){ return Object.assign({}, r, { name: cleanText(r.name) }); });
+  }
+
+  // ---- State. Each instance owns all of it.
+  var open = false;
+  var busy = false;
+  var dead = false;
+  var tab = 'all';
+  var generation = 0;
+  var activeKey = '';
+  var rowsByKey = {};
+  var pointer = { x: null, y: null };
+  var opener = null;
+  var mode = 'normal';
+  var sources = { recent: { status: 'idle', items: [] }, projects: { status: 'idle', items: [] } };
+  var tokens = { recent: 0, projects: 0 };
+  var pending = { recent: 0, projects: 0 };
+  var pickTimer = 0;
+  var lastSaid = '';
+  var timers = [];
+  var observer = null;
+  var gallery = root.closest('main') || document.body;
+
+  // ---- Timers. Each is closured, remembered and checked on arrival, and all of them stop when the dialog closes or the card leaves the DOM.
+  function alive(){
+    if (dead) return false;
+    if (!wrap.isConnected){ destroy(); return false; }
+    return true;
+  }
+  function later(run, ms){
+    var id = setTimeout(function(){
+      var at = timers.indexOf(id);
+      if (at >= 0) timers.splice(at, 1);
+      if (alive()) run();
+    }, ms);
+    timers.push(id);
+    return id;
+  }
+  function cancel(id){
+    if (!id) return;
+    clearTimeout(id);
+    var at = timers.indexOf(id);
+    if (at >= 0) timers.splice(at, 1);
+  }
+  function clearTimers(){
+    while (timers.length) clearTimeout(timers.pop());
+    pending.recent = 0;
+    pending.projects = 0;
+    pickTimer = 0;
+  }
+
+  // ---- The two fake sources. A newer request, a close or a reopen makes an older answer stale, and a stale answer is dropped.
+  function request(name){
+    cancel(pending[name]);
+    tokens[name] += 1;
+    var token = tokens[name];
+    var born = generation;
+    var plan = PLAN[mode][name];
+    // Asked again after an error: the error row stays where it is and says it is loading, so the active row does not jump.
+    sources[name] = { status: 'loading', items: [], retrying: sources[name].status === 'error' };
+    pending[name] = later(function(){
+      pending[name] = 0;
+      if (token !== tokens[name] || born !== generation || !open) return;
+      var rows = plan.say === 'fail' ? null : parseRows(plan.say === 'none' ? [] : (name === 'recent' ? RECENT : PROJECTS));
+      sources[name] = rows ? { status: 'ready', items: rows } : { status: 'error', items: [] };
+      render();
+    }, plan.ms);
+  }
+
+  // ---- The model. Works out what the dialog lists from plain inputs and touches no DOM.
+  function askRow(query){
+    return {
+      id: 'ask', kind: 'ask', icon: 'spark',
+      label: query ? 'Ask Odysseus “' + truncate(query, LIMITS.ask) + '”' : COPY.askEmpty, ranges: [],
+      sub: query ? COPY.askSub : COPY.askEmptySub, hint: '', aria: '', local: false,
+      title: query ? 'Ask Odysseus “' + query + '”' : COPY.askEmpty,
+      opening: 'the composer', payload: { query: query }
+    };
+  }
+  function chatRow(chat, ranges){
+    var sub = [chat.mode, chat.folder, chat.age].filter(Boolean).join(' · ');
+    return {
+      id: 'chat:' + chat.id, kind: 'chat', icon: 'chat', label: chat.name, ranges: ranges, sub: sub,
+      hint: '', aria: '', local: false, title: sub ? chat.name + ' · ' + sub : chat.name,
+      opening: chat.name, payload: {}
+    };
+  }
+  function actionRow(action, ranges){
+    return {
+      id: 'action:' + action.id, kind: 'action', icon: action.icon, label: action.label, ranges: ranges, sub: action.sub,
+      hint: formatBinding(action.binding, IS_MAC), aria: ariaBinding(action.binding, IS_MAC), local: false,
+      title: action.label + ' · ' + action.sub, opening: action.label.replace(/…$/, ''), payload: {}
+    };
+  }
+  function projectRow(project, ranges){
+    var sub = project.local ? COPY.local : COPY.open;
+    return {
+      id: 'project:' + project.id, kind: 'project', icon: 'folder', label: project.name, ranges: ranges, sub: sub,
+      hint: '', aria: '', local: project.local, title: project.name + ' · ' + sub,
+      opening: project.name, payload: {}
+    };
+  }
+  function commandRow(command, ranges){
+    return {
+      id: 'command:' + command.token, kind: 'command', icon: 'terminal', label: command.token, ranges: ranges,
+      sub: truncate(command.help, LIMITS.sub), hint: '', aria: '', local: false,
+      title: command.token + ' · ' + command.help, opening: command.token, payload: {}
+    };
+  }
+  function retryRow(source, text, busy){
+    return {
+      id: 'retry:' + source, kind: 'retry', busy: !!busy, icon: busy ? 'ring' : 'alert', label: text, ranges: [], sub: busy ? '' : COPY.retry,
+      hint: '', aria: '', local: false, title: busy ? text : text + '. ' + COPY.retry, opening: '', payload: { source: source }
+    };
+  }
+  // A group of rows from a source: its rows, then a retry row on error (busy while it asks again), or one status line while there is nothing else to show.
+  function sourcePart(name, query, rows, text){
+    var src = sources[name];
+    var status = null;
+    if (src.status === 'error') rows = rows.concat([retryRow(name, text.error, false)]);
+    else if (src.status === 'idle' || src.status === 'loading'){
+      if (src.retrying) rows = rows.concat([retryRow(name, text.loading, true)]);
+      else status = rows.length ? null : { kind: 'loading', text: text.loading };
+    } else if (!rows.length && !query) status = { kind: 'empty', text: text.empty };
+    return { rows: rows, status: status };
+  }
+  function recentPart(query){
+    var ranked = rank(sources.recent.items, query, function(c){ return c.name; }, function(c){ return [c.folder, c.mode]; });
+    var rows = ranked.slice(0, tab === 'all' ? LIMITS.recentAll : LIMITS.recentTab).map(function(hit){ return chatRow(hit.item, hit.ranges); });
+    return sourcePart('recent', query, rows, { loading: COPY.loadingRecent, error: COPY.errorRecent, empty: COPY.emptyRecent });
+  }
+  function projectsPart(query){
+    var ranked = rank(sources.projects.items, query, function(p){ return p.name; }, function(p){ return [p.id.replace(/-/g, ' ')]; });
+    var limit = tab === 'projects' ? LIMITS.projectsTab : (query ? LIMITS.projectsTyped : LIMITS.projectsIdle);
+    var rows = ranked.slice(0, limit).map(function(hit){ return projectRow(hit.item, hit.ranges); });
+    return sourcePart('projects', query, rows, { loading: COPY.loadingProjects, error: COPY.errorProjects, empty: COPY.emptyProjects });
+  }
+  function actionsPart(query){
+    var ranked = rank(ACTIONS, query, function(a){ return a.label; }, function(a){ return a.words; });
+    return { rows: ranked.map(function(hit){ return actionRow(hit.item, hit.ranges); }), status: null };
+  }
+  function commandsPart(query, limit){
+    var ranked = rank(COMMANDS, query, function(c){ return c.token; }, function(c){ return [c.help]; });
+    return { rows: ranked.slice(0, limit).map(function(hit){ return commandRow(hit.item, hit.ranges); }), status: null };
+  }
+  function buildView(){
+    var query = cleanText(input.value);
+    var typed = query !== '';
+    var slash = query.charAt(0) === '/';
+    var groups = [];
+    function push(id, label, part){
+      if (part.rows.length || part.status) groups.push({ id: id, label: label, rows: part.rows, status: part.status });
+    }
+    // Ask is first on All and only there, so a search that finds nothing still goes somewhere.
+    if (tab === 'all') push('ask', '', { rows: [askRow(query)], status: null });
+    if (tab === 'all' && slash) push('commands', 'Commands', commandsPart(query, LIMITS.commandsSlash));
+    if (tab === 'all' || tab === 'recent') push('recent', 'Recent', recentPart(query));
+    if (tab === 'all' || tab === 'actions') push('actions', 'Actions', actionsPart(query));
+    if (tab === 'all' || tab === 'projects') push('projects', 'Projects', projectsPart(query));
+    if (tab === 'all' && typed && !slash) push('commands', 'Commands', commandsPart(query, LIMITS.commands));
+    var rows = [];
+    groups.forEach(function(group){ group.rows.forEach(function(row){ rows.push(row); }); });
+    var empty = tab !== 'all' && typed && !rows.length && !groups.some(function(group){ return group.status; });
+    return { groups: groups, rows: rows, empty: empty };
+  }
+
+  // ---- Drawing. Text goes in with textContent, only the icon constants are markup.
+  function el(tag, className, text){
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+  function options(){
+    return Array.prototype.slice.call(listEl.querySelectorAll('[role="option"]'));
+  }
+  function keyOf(node){
+    return node ? node.getAttribute('data-row') : '';
+  }
+  function rowNode(row, seq){
+    var node = el('div', 'cbr-row');
+    node.id = 'cbr-opt-' + uid + '-' + seq;
+    node.setAttribute('role', 'option');
+    node.setAttribute('aria-selected', 'false');
+    node.setAttribute('data-row', row.id);
+    node.setAttribute('data-kind', row.kind);
+    node.title = row.title;
+    if (row.busy){
+      node.setAttribute('aria-disabled', 'true');
+      node.setAttribute('data-busy', 'true');
+    }
+    if (row.aria) node.setAttribute('aria-keyshortcuts', row.aria);
+    var tile = el('span', 'cbr-tile');
+    tile.setAttribute('aria-hidden', 'true');
+    tile.innerHTML = svg(row.icon, 16);
+    node.appendChild(tile);
+    var text = el('span', 'cbr-text');
+    var label = el('span', 'cbr-label');
+    appendLabel(label, row.label, row.ranges);
+    text.appendChild(label);
+    if (row.sub) text.appendChild(el('span', 'cbr-sub', row.sub));
+    node.appendChild(text);
+    if (row.local){
+      var lock = el('span', 'cbr-lock');
+      lock.setAttribute('aria-hidden', 'true');
+      lock.innerHTML = svg('lock', 14);
+      node.appendChild(lock);
+    }
+    if (row.hint){
+      var hint = el('kbd', 'cbr-kbd cbr-hint', row.hint);
+      hint.setAttribute('aria-hidden', 'true');
+      node.appendChild(hint);
+    }
+    var enter = el('span', 'cbr-enter', '↵');
+    enter.setAttribute('aria-hidden', 'true');
+    node.appendChild(enter);
+    return node;
+  }
+  function statusNode(status){
+    var node = el('div', 'cbr-status');
+    node.setAttribute('role', 'presentation');
+    node.setAttribute('data-kind', status.kind);
+    var icon = el('span', 'cbr-i');
+    icon.setAttribute('aria-hidden', 'true');
+    icon.innerHTML = svg(status.kind === 'loading' ? 'ring' : 'info', 14);
+    node.appendChild(icon);
+    node.appendChild(el('span', 'cbr-status-text', status.text));
+    return node;
+  }
+  function drawGroups(view){
+    var seq = 0;
+    rowsByKey = {};
+    listEl.textContent = '';
+    view.groups.forEach(function(group){
+      var section = el('div', 'cbr-group');
+      if (group.label){
+        var titleId = 'cbr-group-' + uid + '-' + group.id;
+        section.setAttribute('role', 'group');
+        section.setAttribute('aria-labelledby', titleId);
+        var title = el('div', 'cbr-group-title', group.label);
+        title.id = titleId;
+        section.appendChild(title);
+      } else {
+        section.setAttribute('role', 'presentation');
+      }
+      group.rows.forEach(function(row){
+        seq += 1;
+        rowsByKey[row.id] = row;
+        section.appendChild(rowNode(row, seq));
+      });
+      if (group.status){
+        section.appendChild(statusNode(group.status));
+        if (group.status.kind === 'loading') section.setAttribute('aria-busy', 'true');
+      }
+      if (group.rows.some(function(row){ return row.busy; })) section.setAttribute('aria-busy', 'true');
+      listEl.appendChild(section);
+    });
+  }
+  function drawTabs(){
+    Array.prototype.forEach.call(tabEls, function(tabEl){
+      var on = tabEl.getAttribute('data-tab') === tab;
+      tabEl.setAttribute('aria-selected', on ? 'true' : 'false');
+      tabEl.tabIndex = on ? 0 : -1;
+    });
+  }
+  function announce(count){
+    var text = count === 0 ? 'No results' : (count === 1 ? '1 result' : count + ' results');
+    if (text === lastSaid) return;
+    lastSaid = text;
+    liveEl.textContent = text;
+  }
+  // The active row keeps its place by key across a redraw. A redraw from a typed character or a tab starts again at the top.
+  function render(fromTop){
+    if (!open) return;
+    var before = options().map(keyOf).indexOf(activeKey);
+    var view = buildView();
+    drawTabs();
+    drawGroups(view);
+    emptyEl.hidden = !view.empty;
+    listEl.hidden = !!view.empty;
+    var all = options();
+    var next = null;
+    if (!fromTop && activeKey){
+      next = all.filter(function(node){ return keyOf(node) === activeKey; })[0] || null;
+      if (!next && before >= 0 && all.length) next = all[Math.min(before, all.length - 1)];
+    }
+    if (!next && all.length) next = all[0];
+    setActive(next, false);
+    announce(view.rows.length);
+  }
+
+  // ---- The active row. Focus stays in the field and aria-activedescendant names the row.
+  function reveal(node, toTop){
+    if (toTop){ bodyEl.scrollTop = 0; return; }
+    var top = node.offsetTop;
+    var bottom = top + node.offsetHeight;
+    if (top < bodyEl.scrollTop + 6) bodyEl.scrollTop = Math.max(0, top - 6);
+    else if (bottom > bodyEl.scrollTop + bodyEl.clientHeight - 6) bodyEl.scrollTop = bottom - bodyEl.clientHeight + 6;
+  }
+  function setActive(node, scroll, toTop){
+    options().forEach(function(candidate){ candidate.setAttribute('aria-selected', candidate === node ? 'true' : 'false'); });
+    activeKey = keyOf(node);
+    if (node) input.setAttribute('aria-activedescendant', node.id);
+    else input.removeAttribute('aria-activedescendant');
+    if (node && scroll) reveal(node, toTop);
+  }
+  // Up and Down stop at the ends.
+  function move(step){
+    var all = options();
+    if (!all.length) return;
+    var at = all.map(keyOf).indexOf(activeKey);
+    var next = at < 0 ? (step > 0 ? 0 : all.length - 1) : Math.max(0, Math.min(all.length - 1, at + step));
+    setActive(all[next], true, next === 0);
+  }
+  // A list that scrolls under a resting pointer sends the same position again, and that is not a move.
+  function onHover(event){
+    var node = event.target && event.target.closest ? event.target.closest('[role="option"]') : null;
+    if (!node || !listEl.contains(node)) return;
+    if (event.clientX === pointer.x && event.clientY === pointer.y) return;
+    pointer = { x: event.clientX, y: event.clientY };
+    if (keyOf(node) !== activeKey) setActive(node, false);
+  }
+
+  // ---- Footer.
+  function resetFooter(){
+    legendEl.hidden = false;
+    openingEl.hidden = true;
+    openingTextEl.textContent = '';
+  }
+  function showOpening(name){
+    legendEl.hidden = true;
+    openingEl.hidden = false;
+    openingTextEl.textContent = 'Opening ' + (cleanText(name) || 'it');
+  }
+
+  // ---- What a pick does. Nothing navigates, the result line only says what would happen.
+  function describe(row){
+    if (row.kind === 'ask') return row.payload.query ? 'Would put “' + truncate(row.payload.query, 80) + '” in the composer. Nothing is sent.' : 'Would go to the composer. Nothing is sent.';
+    if (row.kind === 'chat') return 'Would open the chat “' + row.label + '”.';
+    if (row.kind === 'project') return 'Would open the project ' + row.label + '.';
+    if (row.kind === 'command') return 'Would put ' + row.label + ' in the composer.';
+    return 'Would run ' + row.opening + '.';
+  }
+  function cancelPick(){
+    cancel(pickTimer);
+    pickTimer = 0;
+    if (busy){
+      busy = false;
+      resetFooter();
+    }
+  }
+  function activate(node){
+    if (!open || busy) return;
+    var chosen = node || options().filter(function(candidate){ return keyOf(candidate) === activeKey; })[0];
+    var row = chosen && rowsByKey[keyOf(chosen)];
+    if (!row) return;
+    setActive(chosen, false);
+    if (row.busy) return;
+    // An error row asks the source again and keeps the dialog open.
+    if (row.kind === 'retry'){
+      request(row.payload.source);
+      render();
       return;
     }
-    resultsEl.innerHTML = html;
-    if (activeIdx >= flat.length) activeIdx = flat.length - 1;
-    if (activeIdx < 0) activeIdx = 0;
-    highlight();
+    busy = true;
+    showOpening(row.opening);
+    pickTimer = later(function(){
+      pickTimer = 0;
+      closePalette(true);
+      resultEl.textContent = describe(row);
+    }, PICK_MS);
   }
 
-  function highlight(){
-    var els = resultsEl.querySelectorAll('.cbr-result');
-    els.forEach(function(el, i){
-      var on = i === activeIdx;
-      el.classList.toggle('active', on);
-      el.setAttribute('aria-selected', on ? 'true' : 'false');
-    });
-    var cmd = flat[activeIdx];
-    if (!cmd){ previewEl.innerHTML = ''; return; }
-    previewEl.innerHTML =
-      '<div class="cbr-preview-icon" aria-hidden="true">' + esc(cmd.icon) + '</div>' +
-      '<div class="cbr-preview-title">' + esc(cmd.title) + '</div>' +
-      '<div class="cbr-preview-sub">' + esc(cmd.sub) + '</div>' +
-      '<div class="cbr-preview-run">Press <kbd>Enter</kbd> to run</div>';
-    var activeEl = els[activeIdx];
-    if (activeEl && activeEl.scrollIntoView) activeEl.scrollIntoView({ block: 'nearest' });
+  // ---- Open and close.
+  // The shortcut can fire while the frame is off screen, so the first rows of the dialog are scrolled into view without the field's own focus scrolling the page again.
+  function bringIntoView(){
+    var box = frame.getBoundingClientRect();
+    var height = window.innerHeight || document.documentElement.clientHeight || 0;
+    var need = Math.min(box.height, 540);
+    var delta = 0;
+    if (box.top < 8) delta = box.top - 8;
+    else if (box.top + need > height - 8) delta = Math.min(box.top - 8, box.top + need - (height - 8));
+    if (delta) window.scrollBy(0, delta);
   }
-
-  function runActive(){
-    var cmd = flat[activeIdx];
-    if (!cmd) return;
-    statusEl.textContent = 'Last run: ' + cmd.title;
-    closeBar();
-  }
-
-  function openBar(){
-    if (!root.isConnected || dialog.open) return;
-    input.value = '';
-    activeIdx = 0;
-    renderResults();
-    if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
-    setTimeout(function(){ input.focus(); }, 20);
-  }
-  function closeBar(){
-    if (dialog.open) dialog.close(); else dialog.removeAttribute('open');
-  }
-
-  launchBtn.addEventListener('click', openBar);
-  closeBtn.addEventListener('click', closeBar);
-  // Backdrop click: a click lands ON the dialog element itself only when it
-  // hits the backdrop area, never when it hits a descendant (.cbr-box etc),
-  // same idiom as this gallery's Modal Shell overlay check.
-  dialog.addEventListener('click', function(e){ if (e.target === dialog) closeBar(); });
-  resultsEl.addEventListener('click', function(e){
-    var row = e.target.closest ? e.target.closest('.cbr-result') : null;
-    if (!row) return;
-    activeIdx = parseInt(row.getAttribute('data-idx'), 10) || 0;
-    runActive();
-  });
-  input.addEventListener('input', renderResults);
-  input.addEventListener('keydown', function(e){
-    if (e.key === 'ArrowDown'){ e.preventDefault(); activeIdx = Math.min(activeIdx + 1, flat.length - 1); highlight(); }
-    else if (e.key === 'ArrowUp'){ e.preventDefault(); activeIdx = Math.max(activeIdx - 1, 0); highlight(); }
-    else if (e.key === 'Enter'){ e.preventDefault(); runActive(); }
-    // Escape is not handled here: the native <dialog> already closes itself
-    // on Escape (fires 'cancel' then 'close'), nothing to wire up.
-  });
-
-  // Global Ctrl/Cmd+K shortcut. Self-terminating: every keypress re-checks
-  // root.isConnected and detaches itself the instant this card leaves the
-  // DOM. The gallery fully re-renders the grid on every filter click
-  // (grid.innerHTML=''), so a stale instance must never keep listening, or
-  // repeated filter cycles would stack one leaked listener per past render,
-  // all fighting to open a dialog that no longer exists.
-  function onGlobalKey(e){
-    if (!root.isConnected){ document.removeEventListener('keydown', onGlobalKey); return; }
-    var mod = e.ctrlKey || e.metaKey;
-    if (mod && (e.key === 'k' || e.key === 'K')){ e.preventDefault(); openBar(); }
-  }
-  document.addEventListener('keydown', onGlobalKey);
-
-  // Belt-and-braces: react the moment the grid re-renders rather than
-  // waiting for a stray keypress, so cleanup is near-immediate, not just
-  // eventual. Idempotent alongside the check above, removeEventListener on
-  // an already-removed listener is a harmless no-op.
-  var lifecycleObserver = new MutationObserver(function(){
-    if (!root.isConnected){
-      document.removeEventListener('keydown', onGlobalKey);
-      lifecycleObserver.disconnect();
+  function openPalette(event){
+    if (dead || !wrap.isConnected) return;
+    if (open){
+      input.focus({ preventScroll: true });
+      return;
     }
+    var active = document.activeElement;
+    opener = active && active !== document.body && active.isConnected && !dialog.contains(active) ? active : launch;
+    pointer = event && typeof event.clientX === 'number' ? { x: event.clientX, y: event.clientY } : { x: null, y: null };
+    bringIntoView();
+    generation += 1;
+    open = true;
+    busy = false;
+    tab = 'all';
+    activeKey = '';
+    lastSaid = '';
+    sources = { recent: { status: 'idle', items: [] }, projects: { status: 'idle', items: [] } };
+    input.value = '';
+    // The page behind is out of the tab order and out of reach while the dialog is up. The demo strips stay live on purpose.
+    page.inert = true;
+    overlay.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    resetFooter();
+    request('recent');
+    request('projects');
+    render(true);
+    bodyEl.scrollTop = 0;
+    input.focus({ preventScroll: true });
+  }
+  function closePalette(restoreFocus){
+    if (!open) return;
+    open = false;
+    busy = false;
+    generation += 1;
+    tokens.recent += 1;
+    tokens.projects += 1;
+    clearTimers();
+    overlay.hidden = true;
+    page.inert = false;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    listEl.textContent = '';
+    var back = opener;
+    opener = null;
+    if (restoreFocus && back && back.isConnected && typeof back.focus === 'function') back.focus();
+  }
+  function setTab(id, focusTab){
+    if (TABS.indexOf(id) < 0) return;
+    if (id !== tab){
+      cancelPick();
+      tab = id;
+      activeKey = '';
+      resetFooter();
+      render(true);
+      bodyEl.scrollTop = 0;
+    }
+    if (focusTab){
+      var target = tablist.querySelector('[data-tab="' + id + '"]');
+      if (target) target.focus();
+    }
+  }
+
+  // ---- Keys inside the dialog. Tab stays on the field, the close button when it shows and the selected tab, in page order.
+  function stops(){
+    var list = [input];
+    if (closeBtn.getClientRects().length) list.push(closeBtn);
+    var selected = tablist.querySelector('[aria-selected="true"]');
+    if (selected) list.push(selected);
+    return list;
+  }
+  function trapTab(event){
+    var list = stops();
+    var first = list[0];
+    var last = list[list.length - 1];
+    var here = document.activeElement;
+    var inside = list.indexOf(here) >= 0;
+    if (event.shiftKey && (here === first || !inside)){
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (here === last || !inside)){
+      event.preventDefault();
+      first.focus();
+    }
+  }
+  function onDialogKey(event){
+    if (!open || event.isComposing || event.keyCode === 229) return;
+    var key = event.key;
+    if (key === 'Escape'){
+      event.preventDefault();
+      event.stopPropagation();
+      closePalette(true);
+      return;
+    }
+    if (key === 'Tab'){
+      trapTab(event);
+      return;
+    }
+    if (event.target === input){
+      if (key === 'ArrowDown' || key === 'ArrowUp'){
+        event.preventDefault();
+        move(key === 'ArrowDown' ? 1 : -1);
+      } else if (key === 'Enter'){
+        // A modified Enter is open beside, which this pattern does not build. It does nothing rather than open the wrong thing.
+        if (event.metaKey || event.ctrlKey || event.altKey || event.shiftKey) return;
+        event.preventDefault();
+        if (!event.repeat) activate();
+      }
+      return;
+    }
+    var tabEl = event.target && event.target.closest ? event.target.closest('[role="tab"]') : null;
+    if (!tabEl) return;
+    var at = TABS.indexOf(tabEl.getAttribute('data-tab'));
+    var next = -1;
+    if (key === 'ArrowRight') next = Math.min(TABS.length - 1, at + 1);
+    else if (key === 'ArrowLeft') next = Math.max(0, at - 1);
+    else if (key === 'Home') next = 0;
+    else if (key === 'End') next = TABS.length - 1;
+    if (next < 0) return;
+    event.preventDefault();
+    setTab(TABS[next], true);
+  }
+
+  // ---- The shortcut. It acts only while this card is in the DOM and the pointer or focus is in the gallery.
+  // In an app, drop inScope() and the palette answers anywhere on the page.
+  function inScope(target){
+    if (target && target !== document.body && gallery.contains(target)) return true;
+    return gallery.matches(':hover');
+  }
+  function onDocKey(event){
+    if (dead) return;
+    if (!wrap.isConnected){
+      destroy();
+      return;
+    }
+    if (event.defaultPrevented || event.isComposing) return;
+    var key = event.key;
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && (key === 'k' || key === 'K')){
+      if (!inScope(event.target)) return;
+      event.preventDefault();
+      openPalette();
+    } else if (key === 'Escape' && open && (wrap.contains(event.target) || event.target === document.body)){
+      // Focus drifted out of the dialog, so Escape still closes it.
+      event.preventDefault();
+      closePalette(true);
+    }
+  }
+  function destroy(){
+    if (dead) return;
+    dead = true;
+    open = false;
+    clearTimers();
+    document.removeEventListener('keydown', onDocKey);
+    if (observer){
+      observer.disconnect();
+      observer = null;
+    }
+  }
+  document.addEventListener('keydown', onDocKey);
+  // The gallery rebuilds the grid on every filter click, so this watches for the card leaving the DOM and lets go at once.
+  if (typeof MutationObserver === 'function'){
+    observer = new MutationObserver(function(){ if (!wrap.isConnected) destroy(); });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // ---- Events on the card's own nodes. They go when the nodes go.
+  launchKey.textContent = formatBinding('ctrl+k', IS_MAC);
+  launch.addEventListener('click', openPalette);
+  closeBtn.addEventListener('click', function(){ closePalette(true); });
+  overlay.addEventListener('click', function(event){ if (event.target === overlay) closePalette(true); });
+  // Pressing on dead space inside the dialog must not take focus from the field.
+  dialog.addEventListener('mousedown', function(event){
+    if (event.target === input || event.target === bodyEl || (event.target.closest && event.target.closest('button'))) return;
+    event.preventDefault();
   });
-  lifecycleObserver.observe(document.body, { childList: true, subtree: true });
+  dialog.addEventListener('keydown', onDialogKey);
+  input.addEventListener('input', function(){
+    if (!open) return;
+    cancelPick();
+    resetFooter();
+    activeKey = '';
+    render(true);
+    bodyEl.scrollTop = 0;
+  });
+  listEl.addEventListener('click', function(event){
+    var node = event.target && event.target.closest ? event.target.closest('[role="option"]') : null;
+    if (node && listEl.contains(node)) activate(node);
+  });
+  bodyEl.addEventListener('mousemove', onHover);
+  Array.prototype.forEach.call(tabEls, function(tabEl){
+    tabEl.addEventListener('click', function(event){
+      setTab(tabEl.getAttribute('data-tab'), false);
+      // A mouse click puts focus back in the field so typing carries on. A key press keeps it on the tab.
+      if (event.detail > 0) input.focus({ preventScroll: true });
+    });
+  });
+
+  // ---- Demo only: the sources strip and the width strip.
+  Array.prototype.forEach.call(modeBtns, function(btn){
+    btn.addEventListener('click', function(){
+      var next = btn.getAttribute('data-cbr-mode');
+      if (!PLAN[next]) return;
+      mode = next;
+      Array.prototype.forEach.call(modeBtns, function(other){ other.setAttribute('aria-pressed', other === btn ? 'true' : 'false'); });
+    });
+  });
+  Array.prototype.forEach.call(widthBtns, function(btn){
+    btn.addEventListener('click', function(){
+      wrap.setAttribute('data-width', btn.getAttribute('data-cbr-width'));
+      Array.prototype.forEach.call(widthBtns, function(other){ other.setAttribute('aria-pressed', other === btn ? 'true' : 'false'); });
+    });
+  });
 })();
 </script>
 </template>
