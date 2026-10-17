@@ -83,7 +83,7 @@ button{font-family:inherit}
     <span class="logo-name">Design Library</span>
   </div>
   <div class="spacer"></div>
-  <span class="ver">v1.16 (13 Oct)</span>
+  <span class="ver">v1.17 (18 Oct)</span>
   <button class="icon-btn" id="theme-btn" title="Toggle theme" onclick="toggleTheme()">◐</button>
 </header>
 
@@ -572,7 +572,7 @@ button{font-family:inherit}
      PORTED FROM JOURNAL, Components. See CLAUDE.md, "How to add a pattern".
      ========================================================================== -->
 
-<template class="pattern" data-title="Month Calendar" data-category="Components" data-source="Journal (lib/kjr-calendar.js)" data-note="Config-driven month-calendar engine: the engine owns the grid, week-start rotation, nav and roving-tabindex keyboard nav (arrow keys, Enter, PageUp/Down move month). The app injects hooks only, getEvents(startISO,endISO) plus a renderChips(iso,events,ctx) or renderCell override, never forks the grid logic. Canonical vendored copy lives in lib/kjr-calendar.js, configured per app. Click a day then use the arrow keys.">
+<template class="pattern" data-title="Month Calendar" data-category="Components" data-source="App Starter master (lib/kjr-calendar.js), first ported from Journal" data-note="Config-driven month-calendar engine: the engine owns the grid, week-start rotation, nav and roving-tabindex keyboard nav (arrow keys, Enter, PageUp/Down move month). The app injects hooks only, getEvents(startISO,endISO) plus a renderChips(iso,events,ctx) or renderCell override, never forks the grid logic. Canonical vendored copy lives in lib/kjr-calendar.js, configured per app. Click a day then use the arrow keys.">
 <style>
 .mc-wrap{width:100%;max-width:420px}
 .mc-chip{display:inline-flex;align-items:center;gap:3px;max-width:100%;font-size:10.5px;font-weight:600;padding:1px 6px;border-radius:999px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--accent-soft);color:var(--accent)}
@@ -1544,7 +1544,7 @@ button{font-family:inherit}
      PORTED FROM JOURNAL, Utilities. See CLAUDE.md, "How to add a pattern".
      ========================================================================== -->
 
-<template class="pattern" data-title="Format Utils" data-category="Utilities" data-source="Journal (lib/kjr-format.js)" data-note="Pure, side-effect-free formatting and id helpers (no DOM, no localStorage, no fetch), vendored canonical copy in lib/kjr-format.js, shared unmodified and configured only by what calls it. This card demos live output of each helper, including esc() run against a hostile string so the escaped result renders as inert text instead of executing.">
+<template class="pattern" data-title="Format Utils" data-category="Utilities" data-source="App Starter master (lib/kjr-format.js), first ported from Journal" data-note="Pure, side-effect-free formatting and id helpers (no DOM, no localStorage, no fetch), vendored canonical copy in lib/kjr-format.js, shared unmodified and configured only by what calls it. This card demos live output of each helper, including esc() run against a hostile string so the escaped result renders as inert text instead of executing.">
 <style>
 .fu-wrap{width:100%;max-width:400px;font-size:12px}
 .fu-row{display:grid;grid-template-columns:112px 1fr;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
